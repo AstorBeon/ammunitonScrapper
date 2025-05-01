@@ -1,4 +1,5 @@
 import os
+import re
 
 import requests
 from bs4 import BeautifulSoup
@@ -8,15 +9,27 @@ from Models.Offer import Offer
 
 
 AVAILABLE_AMMO_SIZES = ["7,65",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR"]
+AVAILABLE_DYNAMIC_AMMO_SIZES = ["\d{1,2},\d{1,2}x\d{1,2}"] #todo add more
+AVILABLE_AMMO_SIZE_MAPPINGS = {}
 
 def extract_data_from_title(title):
     size = "?"
-    global AVAILABLE_AMMO_SIZES
+    global AVAILABLE_AMMO_SIZES,AVAILABLE_DYNAMIC_AMMO_SIZES
     # get size
+    is_found=False
     for av_size in AVAILABLE_AMMO_SIZES:
         if av_size in title:
             size = av_size
             title = title.replace(av_size, "")
+            is_found = True
+            break
+    if not is_found:
+        for reg_size in AVAILABLE_DYNAMIC_AMMO_SIZES:
+            res = re.findall(reg_size,title)
+            if res:
+                size = res[0]
+                title = title.replace(res[0],"")
+                break
     return title, size
 
 
