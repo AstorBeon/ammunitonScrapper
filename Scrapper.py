@@ -8,8 +8,8 @@ from Models.Offer import Offer
 
 
 
-AVAILABLE_AMMO_SIZES = ["7,65",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR"]
-AVAILABLE_DYNAMIC_AMMO_SIZES = ["\d{1,2},\d{1,2}x\d{1,2}"] #todo add more
+AVAILABLE_AMMO_SIZES = ["7,65",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR","22LR", "22 LR",".44 Rem.",".44", "9 PARA"]
+AVAILABLE_DYNAMIC_AMMO_SIZES = ["\d{1,2}(,|\.)\d{1,2}x\d{1,2}"] #todo add more
 AVILABLE_AMMO_SIZE_MAPPINGS = {}
 
 def extract_data_from_title(title):
@@ -57,18 +57,19 @@ def scrap_top_gun() -> [Offer]:
             return 1
 
         page_links = pagination.find_all('a')
-        page_numbers = [int(link.get_text()) for link in page_links if link.get_text().isdigit()]
+        #print([link.get_text().strip() for link in page_links])
+        page_numbers = [int(link.get_text().strip()) for link in page_links if link.get_text().strip().isdigit()]
         return max(page_numbers) if page_numbers else 1
 
     # Function to scrape product data
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
+        # print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             url = f'{base_url}?p={page}#/cena-0-7'
-            print(f'\nScraping page {page}: {url}')
+            #print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -82,6 +83,7 @@ def scrap_top_gun() -> [Offer]:
                 title_tag = product.find('a', class_='product-name')
                 price_tag = product.find('span', class_='price')
                 link = product.find('a')['href']
+                available = product.find('span',class_="img-sticker position-2") is None
 
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
                 price = price_tag.get_text(strip=True) if price_tag else "No price"
@@ -92,7 +94,8 @@ def scrap_top_gun() -> [Offer]:
                     'title': title,
                     'link': link,
                     'size': size,
-                    'price': price
+                    'price': price,
+                    "available":available
                 })
 
         return products_data
@@ -147,7 +150,8 @@ def scrap_strefa_celu() -> [Offer]:
                 title_tag = product.find('a', class_='product_name').get_text()
                 price_tag = product.find('div', class_='main_price').get_text(strip=True)
                 link_tag = f"https://strefacelu.pl{product.find('a', class_='product_name')['href']}"
-
+                available = product.find("div",{"data-equalizer-watch":"product-availability"}).get_text(strip=True)=="Dostępny"
+                #print(available)
                 title = title_tag if title_tag else "No title"
                 price = price_tag if price_tag else "No price"
                 link = link_tag if link_tag else "No link"
@@ -159,6 +163,7 @@ def scrap_strefa_celu() -> [Offer]:
                     "size":size,
                     'store':"Strefa Celu",
                     'price': price,
+                    'available':available,
                     'link': link
                 })
 
@@ -200,7 +205,7 @@ def scrap_garand() -> [Offer]:
         print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
-            url = f'{base_url}?p={page}'
+            url = f'{base_url}/{page}?p={page}'
             print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
 
@@ -219,7 +224,7 @@ def scrap_garand() -> [Offer]:
 
                 price_tag = product.find('div', class_='box-price')
                 link_tag = product.find('a', class_='product_name')
-
+                available = product.find('span',class_="product-availability-label").get_text() != "Brak"
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
                 price = price_tag.get_text(strip=True) if price_tag else "No price"
                 link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
@@ -231,8 +236,10 @@ def scrap_garand() -> [Offer]:
                     'size':size,
                     'store':"Garand",
                     'price': price,
+                    "available": available,
                     'link': link
                 })
+                #print(products_data[-1])
 
         return products_data
 
@@ -251,6 +258,6 @@ STORES_SCRAPPERS = {
 
 
 # s = Scrapper()
-# #s.scrap_top_gun()
-# #s.scrap_strefa_celu()
-# s.scrap_garand()
+#scrap_top_gun()
+#scrap_strefa_celu()
+#scrap_garand()

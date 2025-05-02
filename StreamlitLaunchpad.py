@@ -64,22 +64,24 @@ with col1:
     #
     pref_size = st.text_input("Enter preferred size")
     #
+    pref_available = st.checkbox("Show only available")
     # if pref_size:
     #     st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["size"].str.contains(pref_size, na=False)]
 
-    if pref_size or pref_name or pref_stores:
+    if pref_size or pref_name or pref_stores or pref_available:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
-        print(f"Filtering for pref name: {pref_name}")
+
         st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
-        print(st.session_state["filtered_df"])
-        print(st.session_state["filtered_df"]["title"].to_list())
 
-        st.session_state["filtered_df"] = st.session_state["filtered_df"][
+        if pref_stores:
+            st.session_state["filtered_df"] = st.session_state["filtered_df"][
             st.session_state["filtered_df"]["store"].isin(pref_stores)]
-
         st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["size"].str.contains(pref_size, na=False)]
-        print(st.session_state["filtered_df"])
-        print(st.session_state["filtered_df"]["size"].to_list())
+
+        #print(st.session_state["filtered_df"].query("available == 'True'"))
+        st.session_state["filtered_df"] = st.session_state["filtered_df"].query("available == 'True'")
+
+
     else:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
@@ -95,16 +97,19 @@ def scrap_complete_data():
 
     for store_name, store_scrap in Scrapper.STORES_SCRAPPERS.items():
         try:
-            res = list(set(store_scrap()))
+            res = store_scrap()
             complete_data.extend(res)
             st.session_state["pulled_data"][store_name] = res
             if not res:
+                print(f"EMPTY STORE: {store_name}")
                 msg = st.error(f"Failed to scrap {store_name} data")
                 st.session_state["loaded_stores"][store_name] = "ERROR"
             else:
                 msg = st.success(f"Successfully scrapped {store_name} data")
                 st.session_state["loaded_stores"][store_name] = "OK"
         except Exception as e:
+            print(e)
+            print(traceback.print_exc())
             msg = st.error(f"Failed to scrap {store_name} data")
             st.session_state["loaded_stores"][store_name] = "ERROR"
 
