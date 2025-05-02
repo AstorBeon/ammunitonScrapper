@@ -1,16 +1,20 @@
 import os
 import re
 
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+from narwhals import DataFrame
 
 from Models.Offer import Offer
 
 
 
-AVAILABLE_AMMO_SIZES = ["7,65",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR","22LR", "22 LR",".44 Rem.",".44", "9 PARA"]
-AVAILABLE_DYNAMIC_AMMO_SIZES = ["\d{1,2}(,|\.)\d{1,2}x\d{1,2}"] #todo add more
-AVILABLE_AMMO_SIZE_MAPPINGS = {}
+AVAILABLE_AMMO_SIZES = ["762x25","243Win","kal. 38Spec","38Spec","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR","22LR", "22 LR",".44 Rem.",".44", "9 PARA"]
+AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})","(\d{2,3}x\d{2})", "(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
+AVAILABLE_AMMO_SIZE_MAPPINGS = {"(9mm|9MM|9 mm|9 MM|9x19|9 PARA)":"9mm",
+                                "(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr)":".22LR",
+                                "(308|308Win|308 Win)":".308 Win",}
 
 def extract_data_from_title(title):
     size = "?"
@@ -27,11 +31,37 @@ def extract_data_from_title(title):
         for reg_size in AVAILABLE_DYNAMIC_AMMO_SIZES:
             res = re.findall(reg_size,title)
             if res:
-                size = res[0]
-                title = title.replace(res[0],"")
+                print(f"Found for regex: {reg_size}")
+                print(f"Matched with: {title}")
+                print(f"Result: {res}")
+                if type(res[0]) in (list,tuple):
+                    size = res[0][0]
+                else:
+                    size = res[0]
+
+                print(f"Size: {size}")
+                title = title.replace(size,"")
                 break
     return title, size
 
+def map_single_size(size:str):
+    for key,val in AVAILABLE_AMMO_SIZE_MAPPINGS.items():
+        if re.findall(key,size):
+            return val
+    return size
+
+def get_all_existing_sizes(df:DataFrame):
+    if df.empty:
+        return []
+    options = list(set(df["size"].to_list()))
+
+    return options
+
+def map_sizes(data:pd.DataFrame):
+
+    data['size'] = data["size"].apply(lambda x:map_single_size(x) )
+
+    return data
 
 
 def scrap_top_gun() -> [Offer]:

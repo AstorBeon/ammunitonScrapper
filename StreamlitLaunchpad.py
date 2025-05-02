@@ -62,7 +62,7 @@ with col1:
     #     st.session_state["filtered_df"] = st.session_state["filtered_df"][
     #         st.session_state["filtered_df"]["store"].isin(pref_stores)]
     #
-    pref_size = st.text_input("Enter preferred size")
+    pref_size = st.multiselect("Enter preferred sizes",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]))
     #
     pref_available = st.checkbox("Show only available")
     # if pref_size:
@@ -76,7 +76,11 @@ with col1:
         if pref_stores:
             st.session_state["filtered_df"] = st.session_state["filtered_df"][
             st.session_state["filtered_df"]["store"].isin(pref_stores)]
-        st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["size"].str.contains(pref_size, na=False)]
+
+        st.session_state["filtered_df"] = st.session_state["filtered_df"][
+            st.session_state["filtered_df"]["size"].isin(pref_size)]
+
+        #st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["size"].str.contains(pref_size, na=False)]
 
         #print(st.session_state["filtered_df"].query("available == 'True'"))
         st.session_state["filtered_df"] = st.session_state["filtered_df"].query("available == 'True'")
@@ -116,7 +120,9 @@ def scrap_complete_data():
 
     try:
 
-        total_df = pd.DataFrame(complete_data)
+        total_df = Scrapper.map_sizes(pd.DataFrame(complete_data))
+        options = Scrapper.get_all_existing_sizes(total_df)
+
 
         st.session_state["complete_df"] = total_df.astype(str)
         st.session_state["filtered_df"] = total_df.astype(str)
