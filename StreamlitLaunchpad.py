@@ -96,10 +96,14 @@ with col2:
 
 
 
-def scrap_complete_data():
+def scrap_complete_data(list_of_stores:list=None):
     complete_data = []
+    excluded_stores = [x for x,check in zip(Scrapper.STORES_SCRAPPERS.keys(),list_of_stores) if not check]
+    #print(excluded_stores)
 
     for store_name, store_scrap in Scrapper.STORES_SCRAPPERS.items():
+        if store_name in excluded_stores:
+            continue
         try:
             res = store_scrap()
             complete_data.extend(res)
@@ -158,8 +162,19 @@ def scrap_complete_data():
             #
             # Thread(target=disappear,args=[msg]).start()
 
-if not st.session_state["pulled_data"]:
-    st.button("Pull current data", on_click=scrap_complete_data,use_container_width=True)
+#if not st.session_state["pulled_data"]:
+st.markdown("\n")
+
+store_col_1,store_col_2,store_col_3 = st.columns(3)
+choosen_stores = {}
+with store_col_1:
+    first_store_check = st.checkbox("Garand",value=True)
+with store_col_2:
+    second_store_check = st.checkbox("Top gun",value=True)
+with store_col_3:
+    third_store_check = st.checkbox("Strefa celu",value=True)
+
+st.button("Pull current data", on_click=scrap_complete_data,args=[(first_store_check,second_store_check,third_store_check)],use_container_width=True)
 
 
 
