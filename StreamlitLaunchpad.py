@@ -33,6 +33,7 @@ if "loaded_stores" not in st.session_state.keys():
     st.session_state["loaded_stores"]={x:"?" for x in Scrapper.STORES_SCRAPPERS}
 COMPLETE_DATA=pd.DataFrame()
 LOADED_STORES = []
+DATA_PULL_TOTAL_TIME=0
 #datatable =  st.dataframe(st.session_state["complete_df"])
 
 try:
@@ -77,7 +78,8 @@ with col1:
             st.session_state["filtered_df"] = st.session_state["filtered_df"][
             st.session_state["filtered_df"]["store"].isin(pref_stores)]
 
-        st.session_state["filtered_df"] = st.session_state["filtered_df"][
+        if pref_size:
+            st.session_state["filtered_df"] = st.session_state["filtered_df"][
             st.session_state["filtered_df"]["size"].isin(pref_size)]
 
         #st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["size"].str.contains(pref_size, na=False)]
@@ -95,33 +97,47 @@ with col2:
     st.text(f"Amount of total records: {len(st.session_state["complete_df"])}")
 
 
+def time_format(start_time):
+    global DATA_PULL_TOTAL_TIME
+    dif = time.time()-start_time
+    DATA_PULL_TOTAL_TIME += dif
+    return round(dif,2)
 
 def scrap_complete_data(list_of_stores:list=None):
+    global DATA_PULL_TOTAL_TIME
+    DATA_PULL_TOTAL_TIME=0
     complete_data = []
     excluded_stores = [x for x,check in zip(Scrapper.STORES_SCRAPPERS.keys(),list_of_stores) if not check]
     #print(excluded_stores)
 
+    #security check
+    if "passok" not in st.session_state.keys() or not st.session_state["passok"]:
+        st.toast("Provide proper password before running the scrapping")
+
+
     for store_name, store_scrap in Scrapper.STORES_SCRAPPERS.items():
         if store_name in excluded_stores:
             continue
+        start_time = time.time()
         try:
+
             res = store_scrap()
             complete_data.extend(res)
             st.session_state["pulled_data"][store_name] = res
             if not res:
                 print(f"EMPTY STORE: {store_name}")
-                msg = st.error(f"Failed to scrap {store_name} data")
+                msg = st.toast(f"ERROR - Failed to scrap {store_name} data ({time_format(start_time)}s)")
                 st.session_state["loaded_stores"][store_name] = "ERROR"
             else:
-                msg = st.success(f"Successfully scrapped {store_name} data")
+                msg = st.toast(f"OK - Successfully scrapped {store_name} data({time_format(start_time)}s)")
                 st.session_state["loaded_stores"][store_name] = "OK"
         except Exception as e:
             print(e)
             print(traceback.print_exc())
-            msg = st.error(f"Failed to scrap {store_name} data")
+            msg = st.toast(f"ERROR - Failed to scrap {store_name} data({time_format(start_time)}s)")
             st.session_state["loaded_stores"][store_name] = "ERROR"
 
-
+    st.success(f"Complete scraping took {round(DATA_PULL_TOTAL_TIME,2)}s")
     try:
 
         total_df = Scrapper.map_sizes(pd.DataFrame(complete_data))
@@ -131,21 +147,6 @@ def scrap_complete_data(list_of_stores:list=None):
         st.session_state["complete_df"] = total_df.astype(str)
         st.session_state["filtered_df"] = total_df.astype(str)
         global COMPLETE_DATA
-        #COMPLETE_DATA = total_df.astype(str)
-
-
-        # print("build")
-        # #print(total_df.describe())
-        # print("------")
-        # print(total_df.dtypes)
-        #
-        # total_df = total_df.astype(str)
-        # print(total_df.dtypes)
-        # #total_df.to_excel(r"C:\Users\macie\Downloads\complete_data.xlsx")
-        # #with col2:
-        #     #pass
-        # print("add df")
-        #st.dataframe(COMPLETE_DATA)
 
 
     except Exception as e:
@@ -174,7 +175,24 @@ with store_col_2:
 with store_col_3:
     third_store_check = st.checkbox("Strefa celu",value=True)
 
-st.button("Pull current data", on_click=scrap_complete_data,args=[(first_store_check,second_store_check,third_store_check)],use_container_width=True)
+
+@st.dialog("Provide pass")
+def vote():
+
+    st.write(f"What's the password?")
+    reason = st.text_input("Password:")
+    if st.button("Submit"):
+        st.session_state["passok"] = reason=="gunlobby"
+
+        st.rerun()
+
+
+
+if "passok" in st.session_state.keys() and st.session_state["passok"]:
+    st.button("Pull current data", on_click=scrap_complete_data,args=[(first_store_check,second_store_check,third_store_check)],use_container_width=True)
+else:
+    vote()
+
 
 
 

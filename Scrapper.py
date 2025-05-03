@@ -10,8 +10,8 @@ from Models.Offer import Offer
 
 
 
-AVAILABLE_AMMO_SIZES = ["762x25","243Win","kal. 38Spec","38Spec","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR","22LR", "22 LR",".44 Rem.",".44", "9 PARA"]
-AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})","(\d{2,3}x\d{2})", "(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
+AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR","22LR", "22 LR",".44 Rem.",".44", "9 PARA"]
+AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})","(\d{1,3}x\d{2})", "(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
 AVAILABLE_AMMO_SIZE_MAPPINGS = {"(9mm|9MM|9 mm|9 MM|9x19|9 PARA)":"9mm",
                                 "(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr)":".22LR",
                                 "(308|308Win|308 Win)":".308 Win",}
