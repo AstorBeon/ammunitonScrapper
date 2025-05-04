@@ -38,8 +38,12 @@ DATA_PULL_TOTAL_TIME=0
 
 try:
     st.subheader("Available pages for scrapping")
+    cols = st.columns(len(st.session_state["loaded_stores"]))
+    count=0
     for store,status in st.session_state["loaded_stores"].items():
-        st.text(f"{store} - {status}")
+        with cols[count]:
+            st.text(f"{store} - {status}")
+            count+=1
 except Exception as e:
     print(e)
 
@@ -166,14 +170,13 @@ def scrap_complete_data(list_of_stores:list=None):
 #if not st.session_state["pulled_data"]:
 st.markdown("\n")
 
-store_col_1,store_col_2,store_col_3 = st.columns(3)
+s_cols = st.columns(len(Scrapper.STORES_SCRAPPERS))
 choosen_stores = {}
-with store_col_1:
-    first_store_check = st.checkbox("Garand",value=True)
-with store_col_2:
-    second_store_check = st.checkbox("Top gun",value=True)
-with store_col_3:
-    third_store_check = st.checkbox("Strefa celu",value=True)
+checkboxes = []
+for key,val in Scrapper.STORES_SCRAPPERS.items():
+    with s_cols[len(checkboxes)]:
+        x = st.checkbox(key,value=True)
+        checkboxes.append(x)
 
 
 @st.dialog("Provide pass")
@@ -181,6 +184,7 @@ def vote():
 
     st.write(f"What's the password?")
     reason = st.text_input("Password:")
+
     if st.button("Submit"):
         st.session_state["passok"] = reason=="gunlobby"
 
@@ -189,7 +193,8 @@ def vote():
 
 
 if "passok" in st.session_state.keys() and st.session_state["passok"]:
-    st.button("Pull current data", on_click=scrap_complete_data,args=[(first_store_check,second_store_check,third_store_check)],use_container_width=True)
+
+    st.button("Pull current data", on_click=scrap_complete_data,args=[checkboxes],use_container_width=True)
 else:
     vote()
 

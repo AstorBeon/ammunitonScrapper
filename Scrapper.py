@@ -1,5 +1,6 @@
 import os
 import re
+from urllib.parse import urljoin
 
 import pandas as pd
 import requests
@@ -62,6 +63,8 @@ def map_sizes(data:pd.DataFrame):
     data['size'] = data["size"].apply(lambda x:map_single_size(x) )
 
     return data
+
+
 
 
 def scrap_top_gun() -> [Offer]:
@@ -277,13 +280,80 @@ def scrap_garand() -> [Offer]:
     product_list = scrape_all_products()
     return product_list
 
+def scrap_jmbron() -> [Offer]:
+    # Base URL for the ammunition section
+    base_url = 'https://jmbron.pl/kategoria-produktu/amunicja/'
 
+    # Headers to mimic a browser
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+    }
 
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        pagination = soup.find('ul', class_='page-numbers')
+        if not pagination:
+            return 1
+
+        page_links = pagination.find_all('a')
+        page_numbers = [int(link.get_text()) for link in page_links if link.get_text().isdigit()]
+        return max(page_numbers) if page_numbers else 1
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        total_pages = get_total_pages()
+        print(f"Total pages found: {total_pages}")
+
+        for page in range(1, total_pages + 1):
+            if page == 1:
+                url = base_url
+            else:
+                url = f'{base_url}page/{page}/'
+            print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                print(f"Failed to retrieve page {page}. Status code: {response.status_code}")
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('li', class_='product')
+
+            for product in product_containers:
+                title_tag = product.find('h2', class_='woocommerce-loop-product__title')
+                price_tag = product.find('span', class_='woocommerce-Price-amount')
+                link_tag = product.find('a', href=True)
+                availability_tag = product.find('p', class_='in-stock')
+
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+                price = price_tag.get_text(strip=True) if price_tag else "No price"
+                link = urljoin(base_url, link_tag['href']) if link_tag else "No link"
+                availability = availability_tag.get_text(strip=True)=="Na stanie" if availability_tag else False
+
+                products_data.append({
+                    'title': title,
+                    'price': price,
+                    'link': link,
+                    'availability': availability
+                })
+
+        return products_data
+
+    product_list = scrape_all_products()
+    return product_list
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand,
     "Top gun":scrap_top_gun,
-    "Strefa celu":scrap_strefa_celu
+    "Strefa celu":scrap_strefa_celu,
+    "JM Bron":scrap_jmbron
 }
 
 
@@ -291,3 +361,6 @@ STORES_SCRAPPERS = {
 #scrap_top_gun()
 #scrap_strefa_celu()
 #scrap_garand()
+#s = scrap_jmbron()
+
+#print(s)
