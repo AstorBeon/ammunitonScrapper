@@ -9,6 +9,9 @@ from narwhals import DataFrame
 
 from Models.Offer import Offer
 
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+}
 
 
 AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR","22LR", "22 LR",".44 Rem.",".44", "9 PARA","357"]
@@ -32,15 +35,15 @@ def extract_data_from_title(title):
         for reg_size in AVAILABLE_DYNAMIC_AMMO_SIZES:
             res = re.findall(reg_size,title)
             if res:
-                print(f"Found for regex: {reg_size}")
-                print(f"Matched with: {title}")
-                print(f"Result: {res}")
+                #print(f"Found for regex: {reg_size}")
+                #print(f"Matched with: {title}")
+                #print(f"Result: {res}")
                 if type(res[0]) in (list,tuple):
                     size = res[0][0]
                 else:
                     size = res[0]
 
-                print(f"Size: {size}")
+                #print(f"Size: {size}")
                 title = title.replace(size,"")
                 break
     return title, size
@@ -52,7 +55,7 @@ def map_single_size(size:str):
     return size
 
 def trim_price(price_text:str):
-    return re.sub(r"[^0-9,\.]","",price_text)
+    return re.sub(r"[^0-9,\.]","",price_text).replace(",",".")
 
 def get_all_existing_sizes(df:DataFrame):
     if df.empty:
@@ -69,20 +72,11 @@ def map_sizes(data:pd.DataFrame):
 
 def map_prices(data:pd.DataFrame):
     data["price"] = data["price"].apply(trim_price)
+    return data
 
-
-
-
-def scrap_top_gun() -> [Offer]:
+def scrap_top_gun() -> [dict]:
     base_url = 'https://sklep.top-gun.pl/5-amunicja'
 
-    # Headers to mimic a browser
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-    }
-
-
-    # Function to get total number of pages
     def get_total_pages():
         url = f'{base_url}#/cena-0-7'
         response = requests.get(url, headers=headers)
@@ -96,15 +90,12 @@ def scrap_top_gun() -> [Offer]:
             return 1
 
         page_links = pagination.find_all('a')
-        #print([link.get_text().strip() for link in page_links])
         page_numbers = [int(link.get_text().strip()) for link in page_links if link.get_text().strip().isdigit()]
         return max(page_numbers) if page_numbers else 1
 
-    # Function to scrape product data
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        # print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             url = f'{base_url}?p={page}#/cena-0-7'
@@ -141,7 +132,7 @@ def scrap_top_gun() -> [Offer]:
     return scrape_all_products()
     # Run the scraper
 
-def scrap_strefa_celu() -> [Offer]:
+def scrap_strefa_celu() -> [dict]:
 
     # Base URL for the ammunition section
     base_url = 'https://strefacelu.pl/category/bron-palna-i-amunicja-amunicja-sportowa'
@@ -212,7 +203,7 @@ def scrap_strefa_celu() -> [Offer]:
     product_list = scrape_all_products()
     return product_list
 
-def scrap_garand() -> [Offer]:
+def scrap_garand() -> [dict]:
     from urllib.parse import urljoin
     base_url = 'https://garand.com.pl/category/amunicja'
 
@@ -286,7 +277,7 @@ def scrap_garand() -> [Offer]:
     product_list = scrape_all_products()
     return product_list
 
-def scrap_jmbron() -> [Offer]:
+def scrap_jmbron() -> [dict]:
     # Base URL for the ammunition section
     base_url = 'https://jmbron.pl/kategoria-produktu/amunicja/'
 
@@ -356,7 +347,7 @@ def scrap_jmbron() -> [Offer]:
     product_list = scrape_all_products()
     return product_list
 
-def scrap_magazynuzbrojenia() -> [Offer]:
+def scrap_magazynuzbrojenia() -> [dict]:
     base_url = 'https://sklep.magazynuzbrojenia.pl/pl/c/Amunicja/1'
 
     # Headers to mimic a browser
@@ -424,7 +415,7 @@ def scrap_magazynuzbrojenia() -> [Offer]:
 
     return scrape_all_products()
 
-def scrap_kaliber() -> [Offer]:
+def scrap_kaliber() -> [dict]:
     base_url = 'https://kaliber.pl/184-amunicja'
 
     # Headers to mimic a browser

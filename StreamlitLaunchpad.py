@@ -76,6 +76,7 @@ with col1:
     if pref_size or pref_name or pref_stores or pref_available:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
+        print(st.session_state["filtered_df"])
         st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
 
         if pref_stores:
@@ -149,8 +150,10 @@ def scrap_complete_data(list_of_stores:list=None):
 
         total_df = Scrapper.map_sizes(pd.DataFrame(complete_data))
         total_df = Scrapper.map_prices(total_df)
-        options = Scrapper.get_all_existing_sizes(total_df)
-
+        #options = Scrapper.get_all_existing_sizes(total_df)
+        #print(total_df)
+        #print(total_df["price"].a)
+        total_df["price"] = total_df["price"].astype(float)
 
         st.session_state["complete_df"] = total_df.astype(str)
         st.session_state["filtered_df"] = total_df.astype(str)
@@ -174,13 +177,28 @@ def scrap_complete_data(list_of_stores:list=None):
 #if not st.session_state["pulled_data"]:
 st.markdown("\n")
 
-s_cols = st.columns(len(Scrapper.STORES_SCRAPPERS))
+s_cols = st.columns(len(Scrapper.STORES_SCRAPPERS)+1)
+if "stores_checkboxes" not in st.session_state.keys():
+    st.session_state["stores_checkboxes"]={store:True for store in Scrapper.STORES_SCRAPPERS.keys()}
 choosen_stores = {}
 checkboxes = []
 for key,val in Scrapper.STORES_SCRAPPERS.items():
     with s_cols[len(checkboxes)]:
-        x = st.checkbox(key,value=True)
+        x = st.checkbox(key,value=st.session_state["stores_checkboxes"][key])
+
         checkboxes.append(x)
+
+
+def select_all():
+    if all(st.session_state["stores_checkboxes"].values()):
+        st.session_state["stores_checkboxes"] = {store:False for store in Scrapper.STORES_SCRAPPERS.keys()}
+
+    else:
+        for k,v in st.session_state["stores_checkboxes"].items():
+            st.session_state["stores_checkboxes"][k]=True
+
+with s_cols[-1]:
+    st.button("Select all",on_click=select_all)
 
 
 @st.dialog("Quick instruction")
