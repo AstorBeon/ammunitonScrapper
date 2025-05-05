@@ -2,7 +2,7 @@
 import time
 import traceback
 from threading import Thread
-
+#from streamlit_server_state import server_state, server_state_lock
 import streamlit as st
 import pandas as pd
 import Scrapper
@@ -118,33 +118,37 @@ def scrap_complete_data(list_of_stores:list=None):
     if "passok" not in st.session_state.keys() or not st.session_state["passok"]:
         st.toast("Provide proper password before running the scrapping")
 
-
+    thread_list = []
     for store_name, store_scrap in Scrapper.STORES_SCRAPPERS.items():
         if store_name in excluded_stores:
             continue
-        start_time = time.time()
-        try:
+        def pull_single_store(store_name_arg):
+            start_time = time.time()
+            try:
 
-            res = store_scrap()
-            complete_data.extend(res)
-            st.session_state["pulled_data"][store_name] = res
-            if not res:
-                print(f"EMPTY STORE: {store_name}")
-                msg = st.toast(f"ERROR - Failed to scrap {store_name} data ({time_format(start_time)}s)")
-                st.session_state["loaded_stores"][store_name] = "ERROR"
-            else:
-                msg = st.toast(f"OK - Successfully scrapped {store_name} data({time_format(start_time)}s)")
-                st.session_state["loaded_stores"][store_name] = "OK"
-        except Exception as e:
-            print(e)
-            print(traceback.print_exc())
-            msg = st.toast(f"ERROR - Failed to scrap {store_name} data({time_format(start_time)}s)")
-            st.session_state["loaded_stores"][store_name] = "ERROR"
+                res = store_scrap()
+                complete_data.extend(res)
+                st.session_state["pulled_data"][store_name_arg] = res
+                if not res:
+                    print(f"EMPTY STORE: {store_name_arg}")
+                    msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data ({time_format(start_time)}s)")
+                    st.session_state["loaded_stores"][store_name_arg] = "ERROR"
+                else:
+                    msg = st.toast(f"OK - Successfully scrapped {store_name_arg} data({time_format(start_time)}s)")
+                    st.session_state["loaded_stores"][store_name_arg] = "OK"
+            except Exception as e:
+                print(e)
+                print(traceback.print_exc())
+                msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data({time_format(start_time)}s)")
+                st.session_state["loaded_stores"][store_name_arg] = "ERROR"
+
+        pull_single_store(store_name)
 
     st.success(f"Complete scraping took {round(DATA_PULL_TOTAL_TIME,2)}s")
     try:
 
         total_df = Scrapper.map_sizes(pd.DataFrame(complete_data))
+        total_df = Scrapper.map_prices(total_df)
         options = Scrapper.get_all_existing_sizes(total_df)
 
 
@@ -179,8 +183,15 @@ for key,val in Scrapper.STORES_SCRAPPERS.items():
         checkboxes.append(x)
 
 
+@st.dialog("Quick instruction")
+def quick_instruction():
+
+    st.write(f"To get the data, select stores in the bottom of the page and press \"Pull data\" button.")
+
+
+
 @st.dialog("Provide pass")
-def vote():
+def ask_for_password():
 
     st.write(f"What's the password?")
     reason = st.text_input("Password:")
@@ -196,14 +207,25 @@ if "passok" in st.session_state.keys() and st.session_state["passok"]:
 
     st.button("Pull current data", on_click=scrap_complete_data,args=[checkboxes],use_container_width=True)
 else:
-    vote()
+    ask_for_password()
 
+if not "manual_read" in st.session_state.keys() or not st.session_state["manual_read"]:
+    st.session_state["manual_read"] = True
+    quick_instruction()
 
-
-
-
-
-
-
+# with server_state_lock["count"]:  # Lock the "count" state for thread-safety
+#     if "count" not in server_state:
+#         server_state.count = 0
+#     server_state["count"] += 1
+#     st.write("Count = ", server_state.count)
+#
+#
+#
+#
+#
+#
+#
+# st.write("Count = ", server_state.count)
+#
 
 

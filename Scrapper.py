@@ -11,11 +11,11 @@ from Models.Offer import Offer
 
 
 
-AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR","22LR", "22 LR",".44 Rem.",".44", "9 PARA"]
-AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})","(\d{1,3}x\d{2})", "(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
-AVAILABLE_AMMO_SIZE_MAPPINGS = {"(9mm|9MM|9 mm|9 MM|9x19|9 PARA)":"9mm",
-                                "(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr)":".22LR",
-                                "(308|308Win|308 Win)":".308 Win",}
+AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR","22LR", "22 LR",".44 Rem.",".44", "9 PARA","357"]
+AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})",r"(\d{1,3}x\d{2})", r"(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
+AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9mm|9MM|9 mm|9 MM|9x19|9 PARA)":"9mm",
+                                r"(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr)":".22LR",
+                                r"(308|308Win|308 Win)":".308 Win",}
 
 def extract_data_from_title(title):
     size = "?"
@@ -51,6 +51,9 @@ def map_single_size(size:str):
             return val
     return size
 
+def trim_price(price_text:str):
+    return re.sub(r"[^0-9,\.]","",price_text)
+
 def get_all_existing_sizes(df:DataFrame):
     if df.empty:
         return []
@@ -60,9 +63,12 @@ def get_all_existing_sizes(df:DataFrame):
 
 def map_sizes(data:pd.DataFrame):
 
-    data['size'] = data["size"].apply(lambda x:map_single_size(x) )
+    data['size'] = data["size"].apply(lambda x:map_single_size(str(x)) )
 
     return data
+
+def map_prices(data:pd.DataFrame):
+    data["price"] = data["price"].apply(trim_price)
 
 
 
@@ -336,31 +342,179 @@ def scrap_jmbron() -> [Offer]:
                 price = price_tag.get_text(strip=True) if price_tag else "No price"
                 link = urljoin(base_url, link_tag['href']) if link_tag else "No link"
                 availability = availability_tag.get_text(strip=True)=="Na stanie" if availability_tag else False
-
+                title,size = extract_data_from_title(title)
                 products_data.append({
                     'title': title,
                     'price': price,
+                    'link': link,
+                    'size':size,
+                    'availability': availability
+                })
+        print(products_data)
+        return products_data
+
+    product_list = scrape_all_products()
+    return product_list
+
+def scrap_magazynuzbrojenia() -> [Offer]:
+    base_url = 'https://sklep.magazynuzbrojenia.pl/pl/c/Amunicja/1'
+
+    # Headers to mimic a browser
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+    }
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers,verify=False)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        pagination = soup.find('ul', class_='paginator')
+        if not pagination:
+            return 1
+
+        page_links = pagination.find_all('li')
+        page_numbers = [int(link.get_text()) for link in page_links if link.get_text().isdigit()]
+        return max(page_numbers) if page_numbers else 1
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        total_pages = get_total_pages()
+        print(f"Total pages found: {total_pages}")
+
+        for page in range(1, total_pages + 1):
+            if page == 1:
+                url = base_url
+            else:
+                url = f'https://sklep.magazynuzbrojenia.pl/pl/c/Amunicja/{page}'
+            print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers,verify=False)
+
+            if response.status_code != 200:
+                print(f"Failed to retrieve page {page}. Status code: {response.status_code}")
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('div', class_='f-row description')
+
+            for product in product_containers:
+                title_tag = product.find('a', class_='prodname')
+                price_tag = product.find('div', class_='price')
+                link = f"https://sklep.magazynuzbrojenia.pl/{title_tag['href']}"
+                availability_tag = product.find('p', class_='avail')
+                #todo pin
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+                price = price_tag.get_text(strip=True) if price_tag else "No price"
+                #link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
+                availability = "brak towaru" not in availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title,size = extract_data_from_title(title)
+                products_data.append({
+                    'title': title,
+                    'price': price,
+                    'size':size,
                     'link': link,
                     'availability': availability
                 })
 
         return products_data
 
-    product_list = scrape_all_products()
-    return product_list
+    return scrape_all_products()
+
+def scrap_kaliber() -> [Offer]:
+    base_url = 'https://kaliber.pl/184-amunicja'
+
+    # Headers to mimic a browser
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+    }
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        pagination = soup.find("div",id="pagination_bottom").find_all("li")
+
+        if not pagination:
+            return 1
+
+        #print([link.get_text().replace("\n","") for link in pagination ])
+        page_numbers = [int(link.get_text().replace("\n","")) for link in pagination if link.get_text().replace("\n","").isdigit()]
+        return max(page_numbers) if page_numbers else 1
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        total_pages = get_total_pages()
+        print(f"Total pages found: {total_pages}")
+
+        for page in range(1, total_pages + 1):
+            if page == 1:
+                url = base_url
+            else:
+                url = f'https://kaliber.pl/184-amunicja#/page-{page}'
+            print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                print(f"Failed to retrieve page {page}. Status code: {response.status_code}")
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('li', class_='productsSection-products-one')
+
+            for product in product_containers:
+                title_tag = product.find('h2', class_='product-name')
+                price_tag = product.find('span', class_='price product-price')
+                link_tag = product.find('a', class_='product-name')
+                availability = bool(link_tag)
+
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+                price = price_tag.get_text(strip=True) if price_tag else ""
+                link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
+                #availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title,size = extract_data_from_title(title)
+                products_data.append({
+                    'title': title,
+                    'price': price,
+                    'link': link,
+                    'size':size,
+                    'availability': availability
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand,
     "Top gun":scrap_top_gun,
     "Strefa celu":scrap_strefa_celu,
-    "JM Bron":scrap_jmbron
+    "JM Bron":scrap_jmbron,
+    "Magazyn uzbrojenia":scrap_magazynuzbrojenia,
+    "Kaliber":scrap_kaliber,
 }
 
-
+#Jm bron
+#Magazyn uzbrojenia
+#Strefa celu
+#Kaliber
+#Gun center
+#Salon broni
+#Bazooka
 # s = Scrapper()
 #scrap_top_gun()
 #scrap_strefa_celu()
 #scrap_garand()
 #s = scrap_jmbron()
-
+#print(scrap_kaliber())
 #print(s)
