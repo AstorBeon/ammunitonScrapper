@@ -486,6 +486,63 @@ def scrap_kaliber() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+def scrap_salonbroni() -> [dict]:
+    base_url = 'https://www.salonbroni.pl/amunicja'
+
+    # Headers to mimic a browser
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+    }
+
+
+
+    url = f'https://www.salonbroni.pl/amunicja'
+    response = requests.get(url, headers=headers, verify=False)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    pages = soup.find("ul",class_="paginator")
+    pages = max([int(x.get_text()) for x in pages.find_all("li") if x.get_text().isdigit()])
+
+
+    # Function to scrape product data
+    def scrape_products(page=1):
+        products_data = []
+        #todo update
+        url = f'https://www.salonbroni.pl/amunicja/{page}'
+        print(f'\nScraping page {page}: {url}')
+        response = requests.get(url, headers=headers, verify=False)
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Adjust the selectors based on the actual HTML structure
+        product_containers = soup.find_all('div', class_='product_view-extended')
+
+        for product in product_containers:
+            title_tag = product.find('a', class_='prodname')
+            price_tag = product.find('div', class_='price')
+            availability = not product.find("button",class_="availability-notifier-btn")
+
+            title = title_tag.get_text(strip=True) if title_tag else "No title"
+            price = price_tag.get_text(strip=True) if price_tag else "No price"
+            link = urljoin(base_url, title_tag['href']) if title_tag and title_tag.has_attr('href') else "No link"
+            #availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+
+            products_data.append({
+                'title': title,
+                'price': price,
+                'link': link,
+                'availability': availability
+            })
+
+        return products_data
+
+    products = []
+
+    for i in range(1, pages):
+        products.extend(scrape_products(i))
+    # Run the scraper
+    return products
+
+
 STORES_SCRAPPERS = {
     "Garand":scrap_garand,
     "Top gun":scrap_top_gun,
@@ -493,6 +550,7 @@ STORES_SCRAPPERS = {
     "JM Bron":scrap_jmbron,
     "Magazyn uzbrojenia":scrap_magazynuzbrojenia,
     "Kaliber":scrap_kaliber,
+    "Salon broni":scrap_salonbroni
 }
 
 #Jm bron
@@ -509,3 +567,4 @@ STORES_SCRAPPERS = {
 #s = scrap_jmbron()
 #print(scrap_kaliber())
 #print(s)
+#print(scrap_salonbroni())
