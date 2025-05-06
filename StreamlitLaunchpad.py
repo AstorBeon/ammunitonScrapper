@@ -133,7 +133,7 @@ def scrap_complete_data(list_of_stores:list=None):
                 else:
                 #     msg = st.toast(f"OK - Successfully scrapped {store_name_arg} data({time_format(start_time)}s)")
                 #     #st.session_state["loaded_stores"][store_name_arg] = "OK"
-                    tmp_store_states[store_name_arg]= f"OK ({(time.time()-start_time,2)}s)"
+                    tmp_store_states[store_name_arg]= f"OK ({round(time.time()-start_time,2)}s)"
             except Exception as e:
                 print(e)
                 print(traceback.print_exc())
