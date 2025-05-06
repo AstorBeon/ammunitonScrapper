@@ -153,7 +153,7 @@ def scrap_complete_data(list_of_stores:list=None):
         #options = Scrapper.get_all_existing_sizes(total_df)
         #print(total_df)
         #print(total_df["price"].a)
-        total_df["price"] = total_df["price"].astype(float)
+        total_df["price"] = total_df["price"].fillna('-1').astype(float)
 
         st.session_state["complete_df"] = total_df.astype(str)
         st.session_state["filtered_df"] = total_df.astype(str)
