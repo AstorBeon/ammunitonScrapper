@@ -105,6 +105,7 @@ def time_format(start_time) -> float:
 def scrap_complete_data(list_of_stores:list=None):
     global DATA_PULL_TOTAL_TIME
     DATA_PULL_TOTAL_TIME=0
+    start = time.time()
     complete_data = []
     excluded_stores = [x for x,check in zip(Scrapper.STORES_SCRAPPERS.keys(),list_of_stores) if not check]
 
@@ -113,6 +114,7 @@ def scrap_complete_data(list_of_stores:list=None):
         st.toast("Provide proper password before running the scrapping")
     #todo check threaded method!!!
     thread_list = []
+    tmp_store_states = {key:"?" for key in Scrapper.STORES_SCRAPPERS.keys()}
     for store_name, store_scrap in Scrapper.STORES_SCRAPPERS.items():
         if store_name in excluded_stores:
             continue
@@ -122,28 +124,38 @@ def scrap_complete_data(list_of_stores:list=None):
 
                 res = store_scrap()
                 complete_data.extend(res)
-                st.session_state["pulled_data"][store_name_arg] = res
+                #st.session_state["pulled_data"][store_name_arg] = res
                 if not res:
-                    print(f"EMPTY STORE: {store_name_arg}")
-                    msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data ({time_format(start_time)}s)")
-                    st.session_state["loaded_stores"][store_name_arg] = "ERROR"
+                #     print(f"EMPTY STORE: {store_name_arg}")
+                #     msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data ({time_format(start_time)}s)")
+                #     #st.session_state["loaded_stores"][store_name_arg] = "ERROR"
+                    tmp_store_states[store_name_arg]= "ERROR"
                 else:
-                    msg = st.toast(f"OK - Successfully scrapped {store_name_arg} data({time_format(start_time)}s)")
-                    st.session_state["loaded_stores"][store_name_arg] = "OK"
+                #     msg = st.toast(f"OK - Successfully scrapped {store_name_arg} data({time_format(start_time)}s)")
+                #     #st.session_state["loaded_stores"][store_name_arg] = "OK"
+                    tmp_store_states[store_name_arg]= f"OK ({(time.time()-start_time,2)}s)"
             except Exception as e:
                 print(e)
                 print(traceback.print_exc())
-                msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data({time_format(start_time)}s)")
+                msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data({round(time_format(start_time))}s)")
                 st.session_state["loaded_stores"][store_name_arg] = "ERROR"
 
-        pull_single_store(store_name)
+        thread_list.append(Thread(target=pull_single_store,args=[store_name]))
+        thread_list[-1].start()
+        #pull_single_store(store_name)
 
-    st.success(f"Complete scraping took {round(DATA_PULL_TOTAL_TIME,2)}s")
+    while any([t.is_alive() for t in thread_list]):
+        time.sleep(1)
+
+    #DATA_PULL_TOTAL_TIME = Scrapper.
+    #st.session_state["complete_data"]
+    st.session_state["loaded_stores"] = tmp_store_states
+    st.success(f"Complete scraping took {round(time.time()-start,2)}s")
     try:
 
         total_df = Scrapper.map_sizes(pd.DataFrame(complete_data))
         total_df = Scrapper.map_prices(total_df)
-        total_df["price"] = total_df["price"].fillna('-1').astype(float)
+        total_df["price"] = total_df["price"].fillna('-1').apply(lambda x:'-1' if x=='' else x).astype(float)
 
         st.session_state["complete_df"] = total_df.astype(str)
         st.session_state["filtered_df"] = total_df.astype(str)
