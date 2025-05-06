@@ -1,6 +1,7 @@
 #Main class to manage rest of the code
 import time
 import traceback
+from csv import excel
 from threading import Thread
 #from streamlit_server_state import server_state, server_state_lock
 import streamlit as st
@@ -9,106 +10,15 @@ import Scrapper
 
 st.set_page_config(layout="wide")
 
-# Title
-st.title("Find ammo in Warsaw!")
-st.subheader("Nifty scrapper collecting data about ammo prices in Warsaw")
-
-title_alignment="""
-<style>
-h1,h3{
-  text-align: center
-}
-</style>
-"""
-st.markdown(title_alignment, unsafe_allow_html=True)
-
-#col1,col2 = st.columns([1,3])
-if "pulled_data" not in st.session_state.keys():
-    st.session_state["pulled_data"]={}
-if "complete_df" not in st.session_state.keys():
-    st.session_state["complete_df"]=pd.DataFrame()
-if "filtered_df" not in st.session_state.keys():
-    st.session_state["filtered_df"]=pd.DataFrame()
-if "loaded_stores" not in st.session_state.keys():
-    st.session_state["loaded_stores"]={x:"?" for x in Scrapper.STORES_SCRAPPERS}
-COMPLETE_DATA=pd.DataFrame()
-LOADED_STORES = []
-DATA_PULL_TOTAL_TIME=0
-#datatable =  st.dataframe(st.session_state["complete_df"])
-
-try:
-    st.subheader("Available pages for scrapping")
-    cols = st.columns(len(st.session_state["loaded_stores"]))
-    count=0
-    for store,status in st.session_state["loaded_stores"].items():
-        with cols[count]:
-            st.text(f"{store} - {status}")
-            count+=1
-except Exception as e:
-    print(e)
-
-st.markdown("\n")
-st.markdown("\n")
-st.markdown("\n")
-
-col1,col2 = st.columns([1,3])
-with col1:
-
-    pref_name = st.text_input("Enter complete/partial name")
-
-    # if pref_name:
-    #     st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
-    #     #print(f"New length : {len(st.session_state['filtered_df'])}")
-    #
-    pref_stores = st.multiselect("Preferred stores",list(Scrapper.STORES_SCRAPPERS.keys()))
-
-    pref_size = st.multiselect("Enter preferred sizes",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]))
-    #
-    pref_available = st.checkbox("Show only available")
-    if pref_size or pref_name or pref_stores or pref_available:
-        st.session_state["filtered_df"] = st.session_state["complete_df"]
-
-
-        st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
-
-        if pref_stores:
-            st.session_state["filtered_df"] = st.session_state["filtered_df"][
-            st.session_state["filtered_df"]["store"].isin(pref_stores)]
-
-        if pref_size:
-            st.session_state["filtered_df"] = st.session_state["filtered_df"][
-            st.session_state["filtered_df"]["size"].isin(pref_size)]
-
-        st.session_state["filtered_df"] = st.session_state["filtered_df"].query("available == 'True'")
-
-
-    else:
-        st.session_state["filtered_df"] = st.session_state["complete_df"]
-
-with col2:
-    st.dataframe(st.session_state["filtered_df"])
-    st.text(f"Amount of filtered records: {len(st.session_state["filtered_df"])}")
-    st.text(f"Amount of total records: {len(st.session_state["complete_df"])}")
-
-
-def time_format(start_time) -> float:
-    """
-    Method for calculating time difference
-    :param start_time: start time of the scrap
-    :return: time (float) scrap took
-    """
-    global DATA_PULL_TOTAL_TIME
-    dif = time.time()-start_time
-    DATA_PULL_TOTAL_TIME += dif
-    return round(dif,2)
-
 def scrap_complete_data(list_of_stores:list=None):
     global DATA_PULL_TOTAL_TIME
     DATA_PULL_TOTAL_TIME=0
     start = time.time()
     complete_data = []
-    excluded_stores = [x for x,check in zip(Scrapper.STORES_SCRAPPERS.keys(),list_of_stores) if not check]
-
+    if list_of_stores is not None:
+        excluded_stores = [x for x,check in zip(Scrapper.STORES_SCRAPPERS.keys(),list_of_stores) if not check]
+    else:
+        excluded_stores=[]
     #security check
     if "passok" not in st.session_state.keys() or not st.session_state["passok"]:
         st.toast("Provide proper password before running the scrapping")
@@ -167,16 +77,58 @@ def scrap_complete_data(list_of_stores:list=None):
         print(traceback.print_exc())
 
 
-#if not st.session_state["complete_df"] is None:
+@st.dialog("Provide pass")
+def ask_for_password():
 
-            # def disappear(prompt):
-            #     time.sleep(3)
-            #     print("DISAPPEARING")
-            #     prompt.empty()
-            #
-            # Thread(target=disappear,args=[msg]).start()
+    st.write(f"What's the password?")
+    reason = st.text_input("Password:")
 
-#if not st.session_state["pulled_data"]:
+    if st.button("Submit"):
+        st.session_state["passok"] = reason=="gunlobby"
+
+        st.rerun()
+
+
+
+
+# Title
+st.title("Find ammo in Warsaw!")
+st.subheader("Nifty scrapper collecting data about ammo prices in Warsaw")
+
+title_alignment="""
+<style>
+h1,h3{
+  text-align: center
+}
+</style>
+"""
+st.markdown(title_alignment, unsafe_allow_html=True)
+
+#col1,col2 = st.columns([1,3])
+if "pulled_data" not in st.session_state.keys():
+    st.session_state["pulled_data"]={}
+if "complete_df" not in st.session_state.keys():
+    st.session_state["complete_df"]=pd.DataFrame()
+if "filtered_df" not in st.session_state.keys():
+    st.session_state["filtered_df"]=pd.DataFrame()
+if "loaded_stores" not in st.session_state.keys():
+    st.session_state["loaded_stores"]={x:"?" for x in Scrapper.STORES_SCRAPPERS}
+COMPLETE_DATA=pd.DataFrame()
+LOADED_STORES = []
+DATA_PULL_TOTAL_TIME=0
+#datatable =  st.dataframe(st.session_state["complete_df"])
+
+try:
+    st.subheader("Available pages for scrapping")
+    cols = st.columns(len(st.session_state["loaded_stores"]))
+    count=0
+    for store,status in st.session_state["loaded_stores"].items():
+        with cols[count]:
+            st.text(f"{store} - {status}")
+            count+=1
+except Exception as e:
+    print(e)
+
 st.markdown("\n")
 
 s_cols = st.columns(len(Scrapper.STORES_SCRAPPERS)+1)
@@ -201,33 +153,96 @@ def select_all():
 
 with s_cols[-1]:
     st.button("Select all",on_click=select_all)
-
-
-@st.dialog("Quick instruction")
-def quick_instruction():
-
-    st.write(f"To get the data, select stores in the bottom of the page and press \"Pull data\" button.")
-
-
-
-@st.dialog("Provide pass")
-def ask_for_password():
-
-    st.write(f"What's the password?")
-    reason = st.text_input("Password:")
-
-    if st.button("Submit"):
-        st.session_state["passok"] = reason=="gunlobby"
-
-        st.rerun()
-
-
-
+st.markdown("\n")
+st.markdown("\n")
 if "passok" in st.session_state.keys() and st.session_state["passok"]:
 
     st.button("Pull current data", on_click=scrap_complete_data,args=[checkboxes],use_container_width=True)
 else:
     ask_for_password()
+st.markdown("\n")
+st.markdown("\n")
+
+col1,col2 = st.columns([1,3])
+with col1:
+
+    pref_name = st.text_input("Enter complete/partial name")
+
+    # if pref_name:
+    #     st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
+    #     #print(f"New length : {len(st.session_state['filtered_df'])}")
+    #
+    pref_stores = st.multiselect("Preferred stores",list(Scrapper.STORES_SCRAPPERS.keys()))
+
+    pref_size = st.multiselect("Enter preferred sizes",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]))
+    #
+    pref_available = st.checkbox("Show only available")
+    if pref_size or pref_name or pref_stores or pref_available:
+        st.session_state["filtered_df"] = st.session_state["complete_df"]
+
+
+        st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
+
+        if pref_stores:
+            st.session_state["filtered_df"] = st.session_state["filtered_df"][
+            st.session_state["filtered_df"]["store"].isin(pref_stores)]
+
+        if pref_size:
+            st.session_state["filtered_df"] = st.session_state["filtered_df"][
+            st.session_state["filtered_df"]["size"].isin(pref_size)]
+
+        st.session_state["filtered_df"] = st.session_state["filtered_df"].query("available == 'True'")
+
+
+    else:
+        st.session_state["filtered_df"] = st.session_state["complete_df"]
+
+with col2:
+    if "passok" in st.session_state.keys() and st.session_state["passok"]:
+        st.dataframe(st.session_state["filtered_df"])
+        st.text(f"Amount of filtered records: {len(st.session_state["filtered_df"])}")
+        st.text(f"Amount of total records: {len(st.session_state["complete_df"])}")
+
+
+def time_format(start_time) -> float:
+    """
+    Method for calculating time difference
+    :param start_time: start time of the scrap
+    :return: time (float) scrap took
+    """
+    global DATA_PULL_TOTAL_TIME
+    dif = time.time()-start_time
+    DATA_PULL_TOTAL_TIME += dif
+    return round(dif,2)
+
+
+
+#if not st.session_state["complete_df"] is None:
+
+            # def disappear(prompt):
+            #     time.sleep(3)
+            #     print("DISAPPEARING")
+            #     prompt.empty()
+            #
+            # Thread(target=disappear,args=[msg]).start()
+
+#if not st.session_state["pulled_data"]:
+st.markdown("\n")
+
+
+
+@st.dialog("Quick instruction")
+def quick_instruction():
+
+
+    st.markdown("\n")
+    st.write(f"Once password is provided, select which stores you want to pull data from and press \Pull data button\\")
+    st.write("It'll take up to 15 secs")
+
+
+
+
+
 
 if not "manual_read" in st.session_state.keys() or not st.session_state["manual_read"]:
     st.session_state["manual_read"] = True
