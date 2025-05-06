@@ -68,7 +68,7 @@ with col1:
     if pref_size or pref_name or pref_stores or pref_available:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
-        print(st.session_state["filtered_df"])
+
         st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
 
         if pref_stores:
@@ -79,9 +79,6 @@ with col1:
             st.session_state["filtered_df"] = st.session_state["filtered_df"][
             st.session_state["filtered_df"]["size"].isin(pref_size)]
 
-        #st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["size"].str.contains(pref_size, na=False)]
-
-        #print(st.session_state["filtered_df"].query("available == 'True'"))
         st.session_state["filtered_df"] = st.session_state["filtered_df"].query("available == 'True'")
 
 
@@ -110,7 +107,6 @@ def scrap_complete_data(list_of_stores:list=None):
     DATA_PULL_TOTAL_TIME=0
     complete_data = []
     excluded_stores = [x for x,check in zip(Scrapper.STORES_SCRAPPERS.keys(),list_of_stores) if not check]
-    #print(excluded_stores)
 
     #security check
     if "passok" not in st.session_state.keys() or not st.session_state["passok"]:

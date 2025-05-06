@@ -1,7 +1,5 @@
-import os
 import re
 from urllib.parse import urljoin
-
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -12,13 +10,13 @@ headers = {
 }
 
 
-AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR","22LR", "22 LR",".44 Rem.",".44", "9 PARA","357"]
+AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223","308 Win","9mm", "9x19", "308", ".22LR","22LR", "22 LR",".44 Rem.",".44", "9 PARA","357","12/70"]
 AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})",r"(\d{1,3}x\d{2})", r"(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
 AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9mm|9MM|9 mm|9 MM|9x19|9 PARA)":"9mm",
                                 r"(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr)":".22LR",
                                 r"(308|308Win|308 Win)":".308 Win",}
 
-def extract_data_from_title(title):
+def extract_data_from_title(title:str) -> (str,str):
     size = "?"
     global AVAILABLE_AMMO_SIZES,AVAILABLE_DYNAMIC_AMMO_SIZES
     # get size
@@ -52,23 +50,23 @@ def map_single_size(size:str):
             return val
     return size
 
-def trim_price(price_text:str):
+def trim_price(price_text:str) -> str:
     return re.sub(r"[^0-9,\.]","",price_text).replace(",",".")
 
-def get_all_existing_sizes(df:DataFrame):
+def get_all_existing_sizes(df:DataFrame)->[str]:
     if df.empty:
         return []
     options = list(set(df["size"].to_list()))
 
     return options
 
-def map_sizes(data:pd.DataFrame):
+def map_sizes(data:pd.DataFrame) -> pd.DataFrame:
 
     data['size'] = data["size"].apply(lambda x:map_single_size(str(x)) )
 
     return data
 
-def map_prices(data:pd.DataFrame):
+def map_prices(data:pd.DataFrame) -> pd.DataFrame:
     data["price"] = data["price"].apply(trim_price)
     return data
 
@@ -348,11 +346,6 @@ def scrap_jmbron() -> [dict]:
 def scrap_magazynuzbrojenia() -> [dict]:
     base_url = 'https://sklep.magazynuzbrojenia.pl/pl/c/Amunicja/1'
 
-    # Headers to mimic a browser
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-    }
-
     # Function to get total number of pages
     def get_total_pages():
         response = requests.get(base_url, headers=headers,verify=False)
@@ -399,7 +392,8 @@ def scrap_magazynuzbrojenia() -> [dict]:
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
                 price = price_tag.get_text(strip=True) if price_tag else "No price"
                 #link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
-                availability = "brak towaru" not in availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                availability = "brak towaru" not in availability_tag.get_text(strip=True)\
+                    if availability_tag else "Availability unknown"
                 title,size = extract_data_from_title(title)
                 products_data.append({
                     'title': title,
@@ -416,11 +410,6 @@ def scrap_magazynuzbrojenia() -> [dict]:
 def scrap_kaliber() -> [dict]:
     base_url = 'https://kaliber.pl/184-amunicja'
 
-    # Headers to mimic a browser
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-    }
-
     # Function to get total number of pages
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
@@ -436,7 +425,8 @@ def scrap_kaliber() -> [dict]:
             return 1
 
         #print([link.get_text().replace("\n","") for link in pagination ])
-        page_numbers = [int(link.get_text().replace("\n","")) for link in pagination if link.get_text().replace("\n","").isdigit()]
+        page_numbers = [int(link.get_text().replace("\n",""))
+                        for link in pagination if link.get_text().replace("\n","").isdigit()]
         return max(page_numbers) if page_numbers else 1
 
     # Function to scrape product data
@@ -487,13 +477,6 @@ def scrap_kaliber() -> [dict]:
 def scrap_salonbroni() -> [dict]:
     base_url = 'https://www.salonbroni.pl/amunicja'
 
-    # Headers to mimic a browser
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-    }
-
-
-
     url = f'https://www.salonbroni.pl/amunicja'
     response = requests.get(url, headers=headers, verify=False)
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -523,13 +506,15 @@ def scrap_salonbroni() -> [dict]:
             price = price_tag.get_text(strip=True) if price_tag else "No price"
             link = urljoin(base_url, title_tag['href']) if title_tag and title_tag.has_attr('href') else "No link"
             #availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
-
+            title,size = extract_data_from_title(title)
             products_data.append({
                 'title': title,
                 'price': price,
+                'size':size,
                 'link': link,
                 'availability': availability
             })
+            print(products_data[-1])
 
         return products_data
 
@@ -541,6 +526,8 @@ def scrap_salonbroni() -> [dict]:
     return products
 
 
+scrap_salonbroni()
+
 STORES_SCRAPPERS = {
     "Garand":scrap_garand,
     "Top gun":scrap_top_gun,
@@ -550,19 +537,3 @@ STORES_SCRAPPERS = {
     "Kaliber":scrap_kaliber,
     "Salon broni":scrap_salonbroni
 }
-
-#Jm bron
-#Magazyn uzbrojenia
-#Strefa celu
-#Kaliber
-#Gun center
-#Salon broni
-#Bazooka
-# s = Scrapper()
-#scrap_top_gun()
-#scrap_strefa_celu()
-#scrap_garand()
-#s = scrap_jmbron()
-#print(scrap_kaliber())
-#print(s)
-#print(scrap_salonbroni())
