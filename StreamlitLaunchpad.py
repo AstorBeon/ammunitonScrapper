@@ -61,18 +61,10 @@ with col1:
     #     #print(f"New length : {len(st.session_state['filtered_df'])}")
     #
     pref_stores = st.multiselect("Preferred stores",list(Scrapper.STORES_SCRAPPERS.keys()))
-    #
-    # if pref_stores:
-    #
-    #     st.session_state["filtered_df"] = st.session_state["filtered_df"][
-    #         st.session_state["filtered_df"]["store"].isin(pref_stores)]
-    #
+
     pref_size = st.multiselect("Enter preferred sizes",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]))
     #
     pref_available = st.checkbox("Show only available")
-    # if pref_size:
-    #     st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["size"].str.contains(pref_size, na=False)]
-
     if pref_size or pref_name or pref_stores or pref_available:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
@@ -102,7 +94,12 @@ with col2:
     st.text(f"Amount of total records: {len(st.session_state["complete_df"])}")
 
 
-def time_format(start_time):
+def time_format(start_time) -> float:
+    """
+    Method for calculating time difference
+    :param start_time: start time of the scrap
+    :return: time (float) scrap took
+    """
     global DATA_PULL_TOTAL_TIME
     dif = time.time()-start_time
     DATA_PULL_TOTAL_TIME += dif
@@ -118,7 +115,7 @@ def scrap_complete_data(list_of_stores:list=None):
     #security check
     if "passok" not in st.session_state.keys() or not st.session_state["passok"]:
         st.toast("Provide proper password before running the scrapping")
-
+    #todo check threaded method!!!
     thread_list = []
     for store_name, store_scrap in Scrapper.STORES_SCRAPPERS.items():
         if store_name in excluded_stores:
@@ -150,9 +147,6 @@ def scrap_complete_data(list_of_stores:list=None):
 
         total_df = Scrapper.map_sizes(pd.DataFrame(complete_data))
         total_df = Scrapper.map_prices(total_df)
-        #options = Scrapper.get_all_existing_sizes(total_df)
-        #print(total_df)
-        #print(total_df["price"].a)
         total_df["price"] = total_df["price"].fillna('-1').astype(float)
 
         st.session_state["complete_df"] = total_df.astype(str)
