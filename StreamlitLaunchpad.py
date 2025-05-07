@@ -1,7 +1,9 @@
 #Main class to manage rest of the code
+import os
 import time
 import traceback
 from csv import excel
+from datetime import datetime
 from threading import Thread
 #from streamlit_server_state import server_state, server_state_lock
 import streamlit as st
@@ -10,7 +12,25 @@ import Scrapper
 
 st.set_page_config(layout="wide")
 
+if "date_of_last_pull" not in st.session_state.keys():
+    st.session_state["date_of_last_pull"] = "None"
+
+def check_if_last_load_was_at_least_x_minutes_ago(minutes:int):
+    try:
+        if (datetime.now().timestamp() - os.path.getmtime("my_silly_database.xlsx"))/60 < minutes:
+            st.toast(f"You can't refresh data more frequently than once per {minutes} minutes")
+            return False
+    except Exception as e:
+        #print(e)
+        return True
+    return True
+
+
 def scrap_complete_data(list_of_stores:list=None):
+   # if not check_if_last_load_was_at_least_x_minutes_ago(minutes=15):
+   #     return
+
+
     global DATA_PULL_TOTAL_TIME
     DATA_PULL_TOTAL_TIME=0
     start = time.time()
@@ -20,8 +40,8 @@ def scrap_complete_data(list_of_stores:list=None):
     else:
         excluded_stores=[]
     #security check
-    if "passok" not in st.session_state.keys() or not st.session_state["passok"]:
-        st.toast("Provide proper password before running the scrapping")
+    # if "passok" not in st.session_state.keys() or not st.session_state["passok"]:
+    #     st.toast("Provide proper password before running the scrapping")
     #todo check threaded method!!!
     thread_list = []
     tmp_store_states = {key:"?" for key in Scrapper.STORES_SCRAPPERS.keys()}
@@ -69,25 +89,87 @@ def scrap_complete_data(list_of_stores:list=None):
 
         st.session_state["complete_df"] = total_df.astype(str)
         st.session_state["filtered_df"] = total_df.astype(str)
+        st.session_state["complete_df"].to_excel("my_silly_database.xlsx",index=False)
+        st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx"))
+        print("Data pulled!")
         global COMPLETE_DATA
-
+        #st.rerun()
 
     except Exception as e:
         print(f"Failed to build data: {e}")
         print(traceback.print_exc())
 
 
-@st.dialog("Provide pass")
-def ask_for_password():
+def try_to_retrieve_data():
+    try:
+        if "complete_df" not in st.session_state.keys():
+            st.session_state["complete_df"] = pd.DataFrame()
 
-    st.write(f"What's the password?")
-    reason = st.text_input("Password:")
+        data = pd.read_excel("my_silly_database.xlsx")
 
-    if st.button("Submit"):
-        st.session_state["passok"] = reason=="gunlobby"
+        if len(st.session_state["complete_df"])!=0:
+            return
+
+        st.session_state["complete_df"] = data
+        st.session_state["filtered_df"] = data
+        st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx"))
+        # with open("last_mod","r") as file:
+        #     st.session_state['date_of_last_pull'] = file.read()
+        print(f"FOUND!")
+        print(st.session_state["date_of_last_pull"])
+
+        #Refreshing statuses for stores
+        if "loaded_stores" not in st.session_state.keys():
+            all_pulled_stores = data["store"].to_list()
+            st.session_state["loaded_stores"]={skey:"OK" if skey in all_pulled_stores else "Err" for skey in Scrapper.STORES_SCRAPPERS.keys()}
+
 
         st.rerun()
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+        #return
+        st.warning("No data loaded :(.  Trying to do it now... (may take up to 20 seconds)")
+        print(f"About to load the data...")
+        scrap_complete_data()
+        print(f"Loaded the data")
 
+        #data = pd.read_excel("my_silly_database.xlsx")
+        # st.session_state["complete_df"] = data
+        # st.session_state["filtered_df"] = data
+
+        print(st.session_state["date_of_last_pull"])
+        print("No pre-loaded db present")
+        #st.rerun()
+
+
+try_to_retrieve_data()
+
+
+@st.dialog("Quick instruction")
+def quick_instruction():
+
+
+    st.markdown("\n")
+    st.write(f"Once password is provided, select which stores you want to pull data from and press \\Pull data button\\")
+    st.write("It'll take up to 15 secs")
+
+
+# @st.dialog("Provide pass")
+# def ask_for_password():
+#
+#     st.write(f"What's the password?")
+#     reason = st.text_input("Password:")
+#
+#     if st.button("Submit"):
+#         st.session_state["passok"] = reason=="gunlobby"
+#         st.session_state["manual_read"] = False
+#
+#         st.rerun()
+
+if  "manual_read" in st.session_state.keys() and st.session_state["manual_read"]:
+    st.session_state["manual_read"] = True
+    quick_instruction()
 
 
 
@@ -155,11 +237,14 @@ with s_cols[-1]:
     st.button("Select all",on_click=select_all)
 st.markdown("\n")
 st.markdown("\n")
-if "passok" in st.session_state.keys() and st.session_state["passok"]:
+#if "passok" in st.session_state.keys() and st.session_state["passok"]:
+st.write(f"Last data refresh: {'None' if 'date_of_last_pull' not in st.session_state.keys() else 
+st.session_state['date_of_last_pull']}")
+st.button("Refresh current data", on_click=scrap_complete_data,args=[checkboxes],use_container_width=True)
+# else:
+#     ask_for_password()
 
-    st.button("Pull current data", on_click=scrap_complete_data,args=[checkboxes],use_container_width=True)
-else:
-    ask_for_password()
+
 st.markdown("\n")
 st.markdown("\n")
 
@@ -174,6 +259,7 @@ with col1:
     #
     pref_stores = st.multiselect("Preferred stores",list(Scrapper.STORES_SCRAPPERS.keys()))
 
+
     pref_size = st.multiselect("Enter preferred sizes",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]))
     #
     pref_available = st.checkbox("Show only available")
@@ -181,8 +267,8 @@ with col1:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
 
-        st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
-
+        if pref_name:
+            st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
         if pref_stores:
             st.session_state["filtered_df"] = st.session_state["filtered_df"][
             st.session_state["filtered_df"]["store"].isin(pref_stores)]
@@ -191,17 +277,17 @@ with col1:
             st.session_state["filtered_df"] = st.session_state["filtered_df"][
             st.session_state["filtered_df"]["size"].isin(pref_size)]
 
-        st.session_state["filtered_df"] = st.session_state["filtered_df"].query("available == 'True'")
+        st.session_state["filtered_df"] = st.session_state["filtered_df"].query("available == True")
 
 
     else:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
 with col2:
-    if "passok" in st.session_state.keys() and st.session_state["passok"]:
-        st.dataframe(st.session_state["filtered_df"])
-        st.text(f"Amount of filtered records: {len(st.session_state["filtered_df"])}")
-        st.text(f"Amount of total records: {len(st.session_state["complete_df"])}")
+    #if "passok" in st.session_state.keys() and st.session_state["passok"]:
+    st.dataframe(st.session_state["filtered_df"])
+    st.text(f"Amount of filtered records: {len(st.session_state["filtered_df"])}")
+    st.text(f"Amount of total records: {len(st.session_state["complete_df"])}")
 
 
 def time_format(start_time) -> float:
@@ -231,22 +317,12 @@ st.markdown("\n")
 
 
 
-@st.dialog("Quick instruction")
-def quick_instruction():
-
-
-    st.markdown("\n")
-    st.write(f"Once password is provided, select which stores you want to pull data from and press \Pull data button\\")
-    st.write("It'll take up to 15 secs")
+#todo pull to local df!!!
 
 
 
 
 
-
-if not "manual_read" in st.session_state.keys() or not st.session_state["manual_read"]:
-    st.session_state["manual_read"] = True
-    quick_instruction()
 
 # with server_state_lock["count"]:  # Lock the "count" state for thread-safety
 #     if "count" not in server_state:

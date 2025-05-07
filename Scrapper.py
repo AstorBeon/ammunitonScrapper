@@ -93,7 +93,7 @@ def scrap_top_gun() -> [dict]:
 
         for page in range(1, total_pages + 1):
             url = f'{base_url}?p={page}#/cena-0-7'
-            #print(f'\nScraping page {page}: {url}')
+            ##print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -156,11 +156,11 @@ def scrap_strefa_celu() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
-
+        #print(f"Total pages found: {total_pages}")
+        
         for page in range(1, total_pages + 1):
             url = f'{base_url}?p={page}'
-            print(f'\nScraping page {page}: {url}')
+            #print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -171,13 +171,13 @@ def scrap_strefa_celu() -> [dict]:
             product_containers = soup.find_all('div', class_='product')
 
             for product in product_containers:
-                title_tag = product.find('a', class_='product_name').get_text()
-                price_tag = product.find('div', class_='main_price').get_text(strip=True)
+                title_tag = product.find('a', class_='product_name')
+                price_tag = product.find('div', class_='main_price')
                 link_tag = f"https://strefacelu.pl{product.find('a', class_='product_name')['href']}"
-                available = product.find("div",{"data-equalizer-watch":"product-availability"}).get_text(strip=True)=="Dostępny"
+                available = product.find("div",{"data-equalizer-watch":"product-availability"})
                 #print(available)
-                title = title_tag if title_tag else "No title"
-                price = price_tag if price_tag else "No price"
+                title = title_tag.get_text() if title_tag else "No title"
+                price = price_tag.get_text(strip=True) if price_tag else "No price"
                 link = link_tag if link_tag else "No link"
 
                 title,size = extract_data_from_title(title)
@@ -187,7 +187,7 @@ def scrap_strefa_celu() -> [dict]:
                     "size":size,
                     'store':"Strefa Celu",
                     'price': price,
-                    'available':available,
+                    'available':available.get_text(strip=True)=="Dostępny" if available else False,
                     'link': link
                 })
 
@@ -226,11 +226,11 @@ def scrap_garand() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
+        #print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             url = f'{base_url}/{page}?p={page}'
-            print(f'\nScraping page {page}: {url}')
+            #print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -300,14 +300,14 @@ def scrap_jmbron() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
+        #print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             if page == 1:
                 url = base_url
             else:
                 url = f'{base_url}page/{page}/'
-            print(f'\nScraping page {page}: {url}')
+            #print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -333,7 +333,8 @@ def scrap_jmbron() -> [dict]:
                     'price': price,
                     'link': link,
                     'size':size,
-                    'availability': availability
+                    'available': availability,
+                    'store': "JM Bron"
                 })
 
         return products_data
@@ -364,14 +365,14 @@ def scrap_magazynuzbrojenia() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
+        #print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             if page == 1:
                 url = base_url
             else:
                 url = f'https://sklep.magazynuzbrojenia.pl/pl/c/Amunicja/{page}'
-            print(f'\nScraping page {page}: {url}')
+            #print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers,verify=False)
 
             if response.status_code != 200:
@@ -398,7 +399,8 @@ def scrap_magazynuzbrojenia() -> [dict]:
                     'price': price,
                     'size':size,
                     'link': link,
-                    'availability': availability
+                    'available': availability,
+                    'store':"Magazyn uzbrojenia"
                 })
 
         return products_data
@@ -438,7 +440,7 @@ def scrap_kaliber() -> [dict]:
                 url = base_url
             else:
                 url = f'https://kaliber.pl/184-amunicja#/page-{page}'
-            print(f'\nScraping page {page}: {url}')
+            #print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -464,7 +466,8 @@ def scrap_kaliber() -> [dict]:
                     'price': price,
                     'link': link,
                     'size':size,
-                    'availability': availability
+                    'available': availability,
+                    'store':'Kaliber'
                 })
 
         return products_data
@@ -487,7 +490,7 @@ def scrap_salonbroni() -> [dict]:
         products_data = []
         #todo update
         url = f'https://www.salonbroni.pl/amunicja/{page}'
-        print(f'\nScraping page {page}: {url}')
+        #print(f'\nScraping page {page}: {url}')
         response = requests.get(url, headers=headers, verify=False)
 
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -510,7 +513,8 @@ def scrap_salonbroni() -> [dict]:
                 'price': price,
                 'size':size,
                 'link': link,
-                'availability': availability
+                'available': availability,
+                'store':"Salon broni"
             })
 
 
@@ -524,14 +528,17 @@ def scrap_salonbroni() -> [dict]:
     return products
 
 
-scrap_salonbroni()
+
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand,
     "Top gun":scrap_top_gun,
-    "Strefa celu":scrap_strefa_celu,
+    "Strefa Celu":scrap_strefa_celu,
     "JM Bron":scrap_jmbron,
     "Magazyn uzbrojenia":scrap_magazynuzbrojenia,
     "Kaliber":scrap_kaliber,
     "Salon broni":scrap_salonbroni
 }
+
+
+scrap_strefa_celu()
