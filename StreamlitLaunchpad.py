@@ -27,8 +27,8 @@ def check_if_last_load_was_at_least_x_minutes_ago(minutes:int):
 
 
 def scrap_complete_data(list_of_stores:list=None):
-   # if not check_if_last_load_was_at_least_x_minutes_ago(minutes=15):
-   #     return
+    if not check_if_last_load_was_at_least_x_minutes_ago(minutes=15):
+       return
 
 
     global DATA_PULL_TOTAL_TIME
