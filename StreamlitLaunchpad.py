@@ -30,7 +30,7 @@ def scrap_complete_data(list_of_stores:list=None):
     if not check_if_last_load_was_at_least_x_minutes_ago(minutes=15):
        return
 
-    st.toast("Data pull started. It may take u to 25 seconds. Sit tight :)")
+    st.toast("Data pull started. It may take up to 25 seconds. Sit tight :)")
     global DATA_PULL_TOTAL_TIME
     DATA_PULL_TOTAL_TIME=0
     start = time.time()
@@ -84,8 +84,9 @@ def scrap_complete_data(list_of_stores:list=None):
         total_df = Scrapper.map_prices(total_df)
         total_df["price"] = total_df["price"].fillna('-1').apply(lambda x:'-1' if x=='' else x).astype(float)
 
-        st.session_state["complete_df"] = total_df.astype(str)
-        st.session_state["filtered_df"] = total_df.astype(str)
+
+        st.session_state["complete_df"] = total_df#.astype(str)
+        st.session_state["filtered_df"] = total_df#.astype(str)
         st.session_state["complete_df"].to_excel("my_silly_database.xlsx",index=False)
         st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx"))
         print("Data pulled!")
