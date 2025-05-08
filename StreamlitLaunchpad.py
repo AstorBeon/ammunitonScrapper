@@ -17,7 +17,7 @@ if "date_of_last_pull" not in st.session_state.keys():
 
 def check_if_last_load_was_at_least_x_minutes_ago(minutes:int):
     try:
-        if (datetime.now().timestamp() - os.path.getmtime("my_silly_database.xlsx"))/60 < minutes:
+        if (datetime.now().timestamp() - os.path.getmtime("my_silly_database.xlsx")+ timedelta(hours=2).total_seconds())/60 < minutes:
             st.toast(f"You can't refresh data more frequently than once per {minutes} minutes")
             return False
     except Exception as e:
@@ -188,12 +188,16 @@ LOADED_STORES = []
 DATA_PULL_TOTAL_TIME=0
 
 try:
-    st.subheader("Available pages for scrapping")
+    st.subheader("Pages currently available :)")
     cols = st.columns(len(st.session_state["loaded_stores"]))
     count=0
     for store,status in st.session_state["loaded_stores"].items():
         with cols[count]:
-            st.text(f"{store} - {status}")
+            if status=="OK":
+                st.success(store)
+            else:
+                st.error(store)
+            #st.text(f"{store} - {status}")
             count+=1
 except Exception as e:
     print(e)
