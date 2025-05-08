@@ -39,10 +39,7 @@ def scrap_complete_data(list_of_stores:list=None):
         excluded_stores = [x for x,check in zip(Scrapper.STORES_SCRAPPERS.keys(),list_of_stores) if not check]
     else:
         excluded_stores=[]
-    #security check
-    # if "passok" not in st.session_state.keys() or not st.session_state["passok"]:
-    #     st.toast("Provide proper password before running the scrapping")
-    #todo check threaded method!!!
+
     thread_list = []
     tmp_store_states = {key:"?" for key in Scrapper.STORES_SCRAPPERS.keys()}
     for store_name, store_scrap in Scrapper.STORES_SCRAPPERS.items():
@@ -251,7 +248,7 @@ st.markdown("\n")
 col1,col2 = st.columns([1,3])
 with col1:
 
-    pref_name = st.text_input("Enter complete/partial name")
+    pref_name = st.text_input("Enter complete/partial name (title)")
 
     # if pref_name:
     #     st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
@@ -268,7 +265,8 @@ with col1:
 
 
         if pref_name:
-            st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
+            st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.lower().str.contains(pref_name, na=False)]
+
         if pref_stores:
             st.session_state["filtered_df"] = st.session_state["filtered_df"][
             st.session_state["filtered_df"]["store"].isin(pref_stores)]
