@@ -3,7 +3,7 @@ import os
 import time
 import traceback
 from csv import excel
-from datetime import datetime
+from datetime import datetime, timedelta
 from threading import Thread
 #from streamlit_server_state import server_state, server_state_lock
 import streamlit as st
@@ -88,8 +88,8 @@ def scrap_complete_data(list_of_stores:list=None):
         st.session_state["complete_df"] = total_df#.astype(str)
         st.session_state["filtered_df"] = total_df#.astype(str)
         st.session_state["complete_df"].to_excel("my_silly_database.xlsx",index=False)
-        st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx"))
-        print("Data pulled!")
+        st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx") + timedelta(hours=2).total_seconds())
+
         global COMPLETE_DATA
         #st.rerun()
 
@@ -113,7 +113,7 @@ def try_to_retrieve_data():
         st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx"))
         # with open("last_mod","r") as file:
         #     st.session_state['date_of_last_pull'] = file.read()
-        print(f"FOUND!")
+
         print(st.session_state["date_of_last_pull"])
 
         #Refreshing statuses for stores
@@ -123,22 +123,12 @@ def try_to_retrieve_data():
 
 
         st.rerun()
-    except Exception as e:
-        print(e)
-        print(traceback.format_exc())
-        #return
+    except FileNotFoundError as e:
+        #Failed to get the file
         st.warning("No data loaded :(.  Trying to do it now... (may take up to 20 seconds)")
-        print(f"About to load the data...")
+        #Attempt to load the data
         scrap_complete_data()
-        print(f"Loaded the data")
-
-        #data = pd.read_excel("my_silly_database.xlsx")
-        # st.session_state["complete_df"] = data
-        # st.session_state["filtered_df"] = data
-
-        print(st.session_state["date_of_last_pull"])
-        print("No pre-loaded db present")
-        #st.rerun()
+        #Data is loaded
 
 
 try_to_retrieve_data()
@@ -196,7 +186,6 @@ if "loaded_stores" not in st.session_state.keys():
 COMPLETE_DATA=pd.DataFrame()
 LOADED_STORES = []
 DATA_PULL_TOTAL_TIME=0
-#datatable =  st.dataframe(st.session_state["complete_df"])
 
 try:
     st.subheader("Available pages for scrapping")
@@ -211,34 +200,37 @@ except Exception as e:
 
 st.markdown("\n")
 
-s_cols = st.columns(len(Scrapper.STORES_SCRAPPERS)+1)
-if "stores_checkboxes" not in st.session_state.keys():
-    st.session_state["stores_checkboxes"]={store:True for store in Scrapper.STORES_SCRAPPERS.keys()}
-choosen_stores = {}
-checkboxes = []
-for key,val in Scrapper.STORES_SCRAPPERS.items():
-    with s_cols[len(checkboxes)]:
-        x = st.checkbox(key,value=st.session_state["stores_checkboxes"][key])
 
-        checkboxes.append(x)
-
-
-def select_all():
-    if all(st.session_state["stores_checkboxes"].values()):
-        st.session_state["stores_checkboxes"] = {store:False for store in Scrapper.STORES_SCRAPPERS.keys()}
-
-    else:
-        for k,v in st.session_state["stores_checkboxes"].items():
-            st.session_state["stores_checkboxes"][k]=True
-
-with s_cols[-1]:
-    st.button("Select all",on_click=select_all)
-st.markdown("\n")
+#Part responsible for selection of singular stores - disabled for now
+# s_cols = st.columns(len(Scrapper.STORES_SCRAPPERS)+1)
+# if "stores_checkboxes" not in st.session_state.keys():
+#     st.session_state["stores_checkboxes"]={store:True for store in Scrapper.STORES_SCRAPPERS.keys()}
+# choosen_stores = {}
+# checkboxes = []
+# for key,val in Scrapper.STORES_SCRAPPERS.items():
+#     with s_cols[len(checkboxes)]:
+#         x = st.checkbox(key,value=st.session_state["stores_checkboxes"][key])
+#
+#         checkboxes.append(x)
+#
+#
+# def select_all():
+#     if all(st.session_state["stores_checkboxes"].values()):
+#         st.session_state["stores_checkboxes"] = {store:False for store in Scrapper.STORES_SCRAPPERS.keys()}
+#
+#     else:
+#         for k,v in st.session_state["stores_checkboxes"].items():
+#             st.session_state["stores_checkboxes"][k]=True
+#
+# with s_cols[-1]:
+#     st.button("Select all",on_click=select_all)
+# st.markdown("\n")
 st.markdown("\n")
 #if "passok" in st.session_state.keys() and st.session_state["passok"]:
 st.write(f"Last data refresh: {'None' if 'date_of_last_pull' not in st.session_state.keys() else 
 st.session_state['date_of_last_pull']}")
-st.button("Refresh current data", on_click=scrap_complete_data,args=[checkboxes],use_container_width=True)
+#st.button("Refresh current data", on_click=scrap_complete_data,args=[checkboxes],use_container_width=True)
+st.button("Refresh current data", on_click=scrap_complete_data,args=[],use_container_width=True)
 # else:
 #     ask_for_password()
 
@@ -317,25 +309,3 @@ st.markdown("\n")
 
 
 #todo pull to local df!!!
-
-
-
-
-
-
-# with server_state_lock["count"]:  # Lock the "count" state for thread-safety
-#     if "count" not in server_state:
-#         server_state.count = 0
-#     server_state["count"] += 1
-#     st.write("Count = ", server_state.count)
-#
-#
-#
-#
-#
-#
-#
-# st.write("Count = ", server_state.count)
-#
-
-
