@@ -30,7 +30,7 @@ def scrap_complete_data(list_of_stores:list=None):
     if not check_if_last_load_was_at_least_x_minutes_ago(minutes=15):
        return
 
-
+    st.toast("Data pull started. It may take u to 25 seconds. Sit tight :)")
     global DATA_PULL_TOTAL_TIME
     DATA_PULL_TOTAL_TIME=0
     start = time.time()
