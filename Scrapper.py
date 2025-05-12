@@ -115,6 +115,7 @@ def scrap_top_gun() -> [dict]:
                 title,size = extract_data_from_title(title)
 
                 products_data.append({
+                    "city":"Warsaw",
                     'store':"Top gun",
                     'title': title,
                     'link': link,
@@ -184,6 +185,7 @@ def scrap_strefa_celu() -> [dict]:
                 title,size = extract_data_from_title(title)
 
                 products_data.append({
+                    "city": "Warsaw",
                     'title': title,
                     "size":size,
                     'store':"Strefa Celu",
@@ -257,6 +259,7 @@ def scrap_garand() -> [dict]:
                 title,size = extract_data_from_title(title)
 
                 products_data.append({
+                    "city": "Warsaw",
                     'title': title,
                     'size':size,
                     'store':"Garand",
@@ -330,6 +333,7 @@ def scrap_jmbron() -> [dict]:
                 availability = availability_tag.get_text(strip=True)=="Na stanie" if availability_tag else False
                 title,size = extract_data_from_title(title)
                 products_data.append({
+                    "city": "Warsaw",
                     'title': title,
                     'price': price,
                     'link': link,
@@ -396,6 +400,7 @@ def scrap_magazynuzbrojenia() -> [dict]:
                     if availability_tag else "Availability unknown"
                 title,size = extract_data_from_title(title)
                 products_data.append({
+                    "city": "Warsaw",
                     'title': title,
                     'price': price,
                     'size':size,
@@ -454,6 +459,7 @@ def scrap_kaliber() -> [dict]:
             for product in product_containers:
                 title_tag = product.find('h2', class_='product-name')
                 price_tag = product.find('span', class_='price product-price')
+
                 link_tag = product.find('a', class_='product-name')
                 availability = bool(link_tag)
 
@@ -463,6 +469,7 @@ def scrap_kaliber() -> [dict]:
                 #availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title,size = extract_data_from_title(title)
                 products_data.append({
+                    "city": "Warsaw",
                     'title': title,
                     'price': price,
                     'link': link,
@@ -510,6 +517,7 @@ def scrap_salonbroni() -> [dict]:
             #availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
             title,size = extract_data_from_title(title)
             products_data.append({
+                "city": "Warsaw",
                 'title': title,
                 'price': price,
                 'size':size,
@@ -541,6 +549,8 @@ STORES_SCRAPPERS = {
     "Salon broni":scrap_salonbroni
 }
 
+
+scrap_kaliber()
 
 # for x in scrap_strefa_celu():
 #     print(x)

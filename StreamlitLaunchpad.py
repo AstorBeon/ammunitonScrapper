@@ -12,6 +12,12 @@ import Scrapper
 
 st.set_page_config(layout="wide")
 
+
+cities_per_region = {"Mazowieckie":["Warsaw","Radom","Płock","Siedlce","Ostrołęka","Ciechanów"],
+                     "Dolnośląskie":["Katowice","Dąbrowa górnicza"]}
+
+
+
 if "date_of_last_pull" not in st.session_state.keys():
     st.session_state["date_of_last_pull"] = "None"
 
@@ -188,7 +194,7 @@ LOADED_STORES = []
 DATA_PULL_TOTAL_TIME=0
 
 try:
-    st.subheader("Pages currently available :)")
+    st.subheader("Stores currently available :)")
     cols = st.columns(len(st.session_state["loaded_stores"]))
     count=0
     for store,status in st.session_state["loaded_stores"].items():
@@ -245,6 +251,18 @@ st.markdown("\n")
 col1,col2 = st.columns([1,3])
 with col1:
 
+    pref_region = st.multiselect("Region",["Mazowieckie","Dolnośląskie"])
+
+    if pref_region:
+
+        cities = [x for xskey, xs in cities_per_region.items() for x in xs if xskey in pref_region]
+        pref_city = st.multiselect("City",cities)
+    else:
+        pref_city = st.multiselect("City",[x for xs in  cities_per_region.values() for x in xs])
+
+
+
+
     pref_name = st.text_input("Enter complete/partial name (title)")
 
     # if pref_name:
@@ -257,9 +275,12 @@ with col1:
     pref_size = st.multiselect("Enter preferred sizes",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]))
     #
     pref_available = st.checkbox("Show only available")
-    if pref_size or pref_name or pref_stores or pref_available:
+    if pref_size or pref_name or pref_stores or pref_available or pref_region:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
+        if pref_city:
+            st.session_state["filtered_df"] = st.session_state["filtered_df"][
+                st.session_state["filtered_df"]["city"].isin(pref_city)]
 
         if pref_name:
             st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.lower().str.contains(pref_name, na=False)]
