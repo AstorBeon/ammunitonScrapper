@@ -13,7 +13,7 @@ import Scrapper
 st.set_page_config(layout="wide")
 
 
-cities_per_region = {"Mazowieckie":["Warsaw","Radom","Płock","Siedlce","Ostrołęka","Ciechanów"],
+cities_per_region = {"Mazowieckie":["Warsaw","Płock","Siedlce","Ostrołęka","Ciechanów"],
                      "Dolnośląskie":["Katowice","Dąbrowa górnicza"]}
 
 

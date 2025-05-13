@@ -536,7 +536,148 @@ def scrap_salonbroni() -> [dict]:
     # Run the scraper
     return products
 
+def scrap_bestgun() -> [dict]:
+    base_url = 'https://www.bestgun.pl/amunicja-c-260.html'
 
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        try:
+            pagination = int([x for x in soup.find("div", class_="IndexStron").find_all("a") if x.get_text().isdigit()][-1].get_text())
+        except Exception as e:
+            print(e)
+            return 1
+
+        # print([link.get_text().replace("\n","") for link in pagination ])
+
+        return pagination
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        total_pages = get_total_pages()
+        print(f"Total pages found: {total_pages}")
+
+        for page in range(1, total_pages + 1):
+            if page == 1:
+                url = base_url
+            else:
+                url = f'{base_url}?page={page}'
+            # print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                print(f"Failed to retrieve page {page}. Status code: {response.status_code}")
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find('div', class_='ListingWierszeKontener').find_all("div",class_="LiniaDolna")
+
+            for product in product_containers:
+                content = product.find("div",class_="ProdCena")
+
+                title_tag = content.find('h3')
+                price_tag = content.find('span', class_='Cena')
+
+                link_tag = product.find('a', class_='Zoom')
+                availability = content.find_all("li")[-1].get_text() == "Dostępność:  Dostępny"
+
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+                price = price_tag.get_text(strip=True) if price_tag else ""
+                link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
+                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Ciechanów",
+                    'title': title,
+                    'price': price,
+                    'link': link,
+                    'size': size,
+                    'available': availability,
+                    'store': 'Best gun'
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
+
+def scrap_mex_armory() -> [dict]:
+    base_url = 'https://mexarmory.pl/product-category/amunicja'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        try:
+            pagination = max([int(x.get_text()) for x in soup.find("nav", class_="woocommerce-pagination").find_all("a") if x.get_text().isdigit()])
+        except Exception as e:
+            print(e)
+            return 1
+
+        # print([link.get_text().replace("\n","") for link in pagination ])
+
+        return pagination
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        total_pages = get_total_pages()
+        print(f"Total pages found: {total_pages}")
+
+        for page in range(1, total_pages + 1):
+            if page == 1:
+                url = base_url
+            else:
+                url = f'{base_url}/page/{page}'
+            # print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                print(f"Failed to retrieve page {page}. Status code: {response.status_code}")
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find('div', class_='shop-container').find_all("div",class_="product-small")
+
+            for product in product_containers:
+                #content = product.find("div",class_="ProdCena")
+
+                title_tag = product.find('div', class_="title-wrapper")
+                price_tag = product.find('div', class_='price-wrapper')
+
+                link_tag = product.find('a')
+
+                availability = product.find("div",class_="out-of-stock-label")
+
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+                price = price_tag.get_text(strip=True) if price_tag else ""
+                link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
+                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Warszawa",
+                    'title': title,
+                    'price': price,
+                    'link': link,
+                    'size': size,
+                    'available': availability,
+                    'store': 'Mex armory'
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
 
 
 STORES_SCRAPPERS = {
@@ -546,11 +687,9 @@ STORES_SCRAPPERS = {
     "JM Bron":scrap_jmbron,
     "Magazyn uzbrojenia":scrap_magazynuzbrojenia,
     "Kaliber":scrap_kaliber,
-    "Salon broni":scrap_salonbroni
+    "Salon broni":scrap_salonbroni,
+    "Best gun":scrap_bestgun,
+    "Mex armory": scrap_mex_armory
 }
 
 
-scrap_kaliber()
-
-# for x in scrap_strefa_celu():
-#     print(x)
