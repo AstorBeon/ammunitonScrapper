@@ -679,6 +679,77 @@ def scrap_mex_armory() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+def scrap_gun_eagle_rusznikarnia() -> [dict]:
+    base_url = 'https://www.gun-eagle.pl/amunicja-c-7.html'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        try:
+            pagination = int([x for x in soup.find("div", class_="IndexStron").find_all("a") if x.get_text().isdigit()][-1].get_text())
+        except Exception as e:
+            print(e)
+            return 1
+
+        # print([link.get_text().replace("\n","") for link in pagination ])
+
+        return pagination
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        total_pages = get_total_pages()
+        print(f"Total pages found: {total_pages}")
+
+        for page in range(1, total_pages + 1):
+            if page == 1:
+                url = base_url
+            else:
+                url = f'{base_url}?page={page}'
+            # print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                print(f"Failed to retrieve page {page}. Status code: {response.status_code}")
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('div', class_='ListingWierszeKontener')
+
+            for product in product_containers:
+                content = product.find("div",class_="ProdCena")
+
+                title_tag = content.find('h3')
+                price_tag = content.find('span', class_='Cena')
+
+                link_tag = product.find('a', class_='Zoom')
+                availability = content.find_all("li")[-1].get_text() == "Dostępność:  Dostępny"
+
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+                price = price_tag.get_text(strip=True) if price_tag else ""
+                link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
+                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Ostrołęka",
+                    'title': title,
+                    'price': price,
+                    'link': link,
+                    'size': size,
+                    'available': availability,
+                    'store': 'Gun eagle rusznikarnia'
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
+
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand,
@@ -689,7 +760,8 @@ STORES_SCRAPPERS = {
     "Kaliber":scrap_kaliber,
     "Salon broni":scrap_salonbroni,
     "Best gun":scrap_bestgun,
-    "Mex armory": scrap_mex_armory
+    "Mex armory": scrap_mex_armory,
+    "Gun eagle rusznikarnia": scrap_gun_eagle_rusznikarnia
 }
 
 
