@@ -14,7 +14,7 @@ st.set_page_config(layout="wide")
 
 
 cities_per_region = {"Mazowieckie":["Warsaw","Płock","Siedlce","Ostrołęka","Ciechanów"],
-                     "Dolnośląskie":["Katowice","Dąbrowa górnicza"]}
+                     "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice"]}
 
 
 
