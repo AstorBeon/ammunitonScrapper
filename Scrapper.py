@@ -52,6 +52,11 @@ def map_single_size(size:str):
 def trim_price(price_text:str) -> str:
     return re.sub(r"[^0-9,\.]","",price_text).replace(",",".")
 
+
+def clean_other_than_nums(text):
+    return re.sub(r"[^0-9]", "", text)
+
+
 def get_all_existing_sizes(df:DataFrame)->[str]:
     if df.empty:
         return []
@@ -824,6 +829,80 @@ def scrap_top_shot() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+def scrap_kwatermistrz() -> [dict]:
+    base_url = 'https://www.kwatermistrz.com.pl/amunicja'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+
+        try:
+
+            pagination = max([int(clean_other_than_nums(x.get_text(strip=True))) for x in soup.find("ul", class_="paginator").find_all("li") if clean_other_than_nums(x.get_text(strip=True)).isdigit()])
+        except Exception as e:
+            print(e)
+            return 1
+
+        # print([link.get_text().replace("\n","") for link in pagination ])
+
+        return pagination
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        total_pages = get_total_pages()
+        print(f"Total pages found: {total_pages}")
+
+        for page in range(1, total_pages + 1):
+            if page == 1:
+                url = base_url
+            else:
+                url = f'{base_url}?page={page}'
+            # print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                print(f"Failed to retrieve page {page}. Status code: {response.status_code}")
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('div', class_='product-inner-wrap')
+
+            for product in product_containers:
+
+                title_tag = product.find('a',class_="prodname")
+                price_tag = product.find('div', class_='product__basket')
+
+
+                availability = product.find("form", class_="availability-notifier")
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+                price = price_tag.get_text(strip=True) if price_tag else ""
+                print(price)
+                price = re.findall(r"Cena:[0-9,]+",price)[0].replace("Cena:","")
+                link = title_tag['href'] if title_tag and title_tag.has_attr('href') else "No link"
+                link = base_url + link
+                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Łódź",
+                    'title': title,
+                    'price': price,
+                    'link': link,
+                    'size': size,
+                    'available': availability is None,
+                    'store': 'Kwatermistrz'
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
 
 
 STORES_SCRAPPERS = {
@@ -837,7 +916,7 @@ STORES_SCRAPPERS = {
     "Best gun":scrap_bestgun,
     "Mex armory": scrap_mex_armory,
     "Gun eagle rusznikarnia": scrap_gun_eagle_rusznikarnia,
-    "Top shot": scrap_top_shot
+    "Top shot": scrap_top_shot,
+    "Kwatermistrz":scrap_kwatermistrz
 }
-
 
