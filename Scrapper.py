@@ -1,3 +1,4 @@
+import math
 import re
 from urllib.parse import urljoin
 import pandas as pd
@@ -904,6 +905,87 @@ def scrap_kwatermistrz() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+def scrap_c4guns() -> [dict]:
+    base_url = 'https://c4guns.sklep.pl/16-amunicja'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+
+        try:
+
+            #pagination = max([int(clean_other_than_nums(x.get_text(strip=True))) for x in soup.find("ul", class_="paginator").find_all("li") if clean_other_than_nums(x.get_text(strip=True)).isdigit()])
+            page_desc = soup.find("div",{"id":"js-product-list-top"}).find("span",class_="hidden-sm-down").get_text()
+            #current = re.findall(r"\d+-\d+",page_desc)[0]
+            total = re.findall(r"z \d+",page_desc)[0]
+            pagination = math.ceil(int(total[2:])/24)
+        except Exception as e:
+            print(e)
+            return 1
+
+        # print([link.get_text().replace("\n","") for link in pagination ])
+
+        return pagination
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        total_pages = get_total_pages()
+        print(f"Total pages found: {total_pages}")
+
+        for page in range(1, total_pages + 1):
+            if page == 1:
+                url = base_url
+            else:
+                url = f'{base_url}?page={page}'
+            # print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                print(f"Failed to retrieve page {page}. Status code: {response.status_code}")
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('article', class_='product-miniature-default')
+
+            for product in product_containers:
+                container = product.find('div', class_='product-description')
+                title_tag = container.find('h2',class_="product-title")
+                link_tag = product.find('div',class_="thumbnail-container").find("a")
+                price_tag = container.find('div', class_='product-price-and-shipping')
+
+
+                #availability = product.find("form", class_="availability-notifier")
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+                price = price_tag.get_text(strip=True) if price_tag else ""
+                #print(price)
+                #print(price)
+                price = price.replace(" zł:","")
+                link = link_tag['href'] if link_tag and link_tag.has_attr('href') else "No link"
+                link = base_url + link
+                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Łódź",
+                    'title': title,
+                    'price': price,
+                    'link': link,
+                    'size': size,
+                    'available': "?",
+                    'store': 'C4guns'
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
+
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand,
@@ -920,3 +1002,6 @@ STORES_SCRAPPERS = {
     "Kwatermistrz":scrap_kwatermistrz
 }
 
+
+for s in scrap_c4guns():
+    print(s)
