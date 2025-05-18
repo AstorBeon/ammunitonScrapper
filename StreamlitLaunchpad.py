@@ -14,7 +14,8 @@ st.set_page_config(layout="wide")
 
 
 cities_per_region = {"Mazowieckie":["Warsaw","Płock","Siedlce","Ostrołęka","Ciechanów"],
-                     "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice"]}
+                     "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice","Aleksandrów Łódzki"],
+                     "Wielkopolskie": ["Poznań"]}
 
 
 
