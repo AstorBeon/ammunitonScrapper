@@ -1285,6 +1285,89 @@ def scrap_astorclassic() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+#https://gunsmasters.pl/produkty/amunicja,2,55
+def scrap_gunsmasters() -> [dict]:
+    base_url = 'https://gunsmasters.pl/produkty/dostępność=dostępny-/amunicja,2,55'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+
+        try:
+
+            pagination = max([int(clean_other_than_nums(x.get_text(strip=True))) for x in soup.find("ul", class_="pagination").find_all("li") if clean_other_than_nums(x.get_text(strip=True)).isdigit()])
+        except Exception as e:
+            print(e)
+            return 1
+
+        # print([link.get_text().replace("\n","") for link in pagination ])
+
+        return pagination
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        total_pages = get_total_pages()
+        print(f"Total pages found: {total_pages}")
+
+        for page in range(1, total_pages + 1):
+            if page == 1:
+                url = base_url
+            else:
+                url = f'{base_url}?page={page}'
+            # print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                print(f"Failed to retrieve page {page}. Status code: {response.status_code}")
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('div', class_='product-item')
+
+            for product in product_containers:
+
+                title_tag = product.find('h2')
+                prices_tag = product.find_all('span', class_='price')
+                #print([x.get_text(strip=True) for x in prices_tag])
+
+                #availability = product.find("form", class_="availability-notifier")
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+                try:
+                    price = product.find("span", class_="red-price").get_text(strip=True)
+
+                except Exception as e:
+                    price = prices_tag[2].get_text(strip=True)
+
+                availibility = len(prices_tag)==3
+
+                price = price.replace("Cena:","").replace(" zł","")
+                link = product.find("a")['href'] if title_tag and title_tag.has_attr('href') else "No link"
+                link = base_url + link
+                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Wrocław",
+                    'title': title,
+                    'price': price ,
+                    'link': link,
+                    'size': size,
+                    'available': availibility != "Powiadom o dostępności",
+                    'store': 'Gunmasters'
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
+
+
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand,
@@ -1301,7 +1384,8 @@ STORES_SCRAPPERS = {
     "Kwatermistrz":scrap_kwatermistrz,
     "C4guns":scrap_c4guns,
     "RParms":scrap_rparms,
-    "Astroclassic":scrap_astorclassic
+    "Astroclassic":scrap_astorclassic,
+    "Gunmasters":scrap_gunsmasters
 }
 
 
