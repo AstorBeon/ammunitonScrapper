@@ -1367,6 +1367,88 @@ def scrap_gunsmasters() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+def scrap_knieja() -> [dict]:
+    base_url = 'https://www.knieja.com.pl/30-amunicja-i-elaboracja'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+
+        try:
+
+            pagination = max([int(clean_other_than_nums(x.get_text(strip=True))) for x in soup.find("ul", class_="pagination").find_all("li") if clean_other_than_nums(x.get_text(strip=True)).isdigit()])
+        except Exception as e:
+            print(e)
+            return 1
+
+        # print([link.get_text().replace("\n","") for link in pagination ])
+
+        return pagination
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        total_pages = get_total_pages()
+        print(f"Total pages found: {total_pages}")
+
+        for page in range(1, total_pages + 1):
+            if page == 1:
+                url = base_url
+            else:
+                url = f'{base_url}?page={page}'
+            # print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                print(f"Failed to retrieve page {page}. Status code: {response.status_code}")
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('div', class_='card-product')
+
+            for product in product_containers:
+
+                title_tag = product.find('h2')
+                try:
+                    price = product.find('span', class_='price').get_text(strip=True)
+                    availibility=True
+                except:
+                    price='-1'
+                    availibility = False
+                #print([x.get_text(strip=True) for x in prices_tag])
+
+                #availability = product.find("form", class_="availability-notifier")
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+
+                #availibility = "zł" in price
+
+                price = price.replace("Cena:","").replace(" zł","").replace("\xa0zł","")
+
+                link = product.find("a")['href']
+
+                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Kraków",
+                    'title': title,
+                    'price': price ,
+                    'link': link,
+                    'size': size,
+                    'available': availibility,
+                    'store': 'Knieja'
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
+
 
 
 STORES_SCRAPPERS = {
@@ -1384,8 +1466,9 @@ STORES_SCRAPPERS = {
     "Kwatermistrz":scrap_kwatermistrz,
     "C4guns":scrap_c4guns,
     "RParms":scrap_rparms,
-    "Astroclassic":scrap_astorclassic,
-    "Gunmasters":scrap_gunsmasters
+    "Astroclassic":scrap_astorclassic, #Poznań
+    "Gunmasters":scrap_gunsmasters, #Wrocław,
+    "Knieja":scrap_knieja #Kraków
 }
 
 
