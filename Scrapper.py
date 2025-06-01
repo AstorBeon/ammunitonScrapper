@@ -1449,6 +1449,77 @@ def scrap_knieja() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+def scrap_atenagun() -> [dict]:
+    base_url = 'https://www.atenagun.pl/kategoria/amunicja'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+
+        # print([link.get_text().replace("\n","") for link in pagination ])
+
+
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        page=1
+        while True:
+
+            url = f'{base_url}/page/{page}/'
+            # print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+            page+=1
+            if response.status_code != 200:
+
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('article')
+            print(len(product_containers))
+
+            for product in product_containers:
+
+                title_tag = product.find('h2')
+                try:
+                    price = product.find('span', class_='woocommerce-Price-amount').get_text(strip=True)
+
+                except:
+                    price='-1'
+
+                #print([x.get_text(strip=True) for x in prices_tag])
+                availibility = product.find("div",class_="stock").get_text(strip=True) == "w magazynie"
+                #availability = product.find("form", class_="availability-notifier")
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+
+                #availibility = "zł" in price
+
+                price = price.replace("Cena:","").replace("zł","").replace("\xa0zł","")
+
+                link = product.find("a")['href']
+
+                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Kraków",
+                    'title': title,
+                    'price': price ,
+                    'link': link,
+                    'size': size,
+                    'available': availibility,
+                    'store': 'Atena Gun'
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
 
 
 STORES_SCRAPPERS = {
@@ -1468,7 +1539,10 @@ STORES_SCRAPPERS = {
     "RParms":scrap_rparms,
     "Astroclassic":scrap_astorclassic, #Poznań
     "Gunmasters":scrap_gunsmasters, #Wrocław,
-    "Knieja":scrap_knieja #Kraków
+    "Knieja":scrap_knieja #Kraków,
+    "Atena Gun":scrap_atenagun, #Kraków
 }
 
+for c in scrap_atenagun():
+    print(c)
 
