@@ -1,5 +1,6 @@
 #Main class to manage rest of the code
 import os
+import re
 import time
 import traceback
 from csv import excel
@@ -36,10 +37,9 @@ def check_if_last_load_was_at_least_x_minutes_ago(minutes:int):
 
 
 def scrap_complete_data(list_of_stores:list=None):
-    if not check_if_last_load_was_at_least_x_minutes_ago(minutes=15):
-       return
 
-    st.toast("Data pull started. It may take up to 25 seconds. Sit tight :)")
+
+    st.toast("Data pull started. It may take up couple of minutes. Sit tight :)")
     global DATA_PULL_TOTAL_TIME
     DATA_PULL_TOTAL_TIME=0
     start = time.time()
@@ -63,11 +63,11 @@ def scrap_complete_data(list_of_stores:list=None):
                 #st.session_state["pulled_data"][store_name_arg] = res
                 if not res:
                 #     print(f"EMPTY STORE: {store_name_arg}")
-                #     msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data ({time_format(start_time)}s)")
+                    msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data ({time_format(start_time)}s)")
                 #     #st.session_state["loaded_stores"][store_name_arg] = "ERROR"
                     tmp_store_states[store_name_arg]= "ERROR"
                 else:
-                #     msg = st.toast(f"OK - Successfully scrapped {store_name_arg} data({time_format(start_time)}s)")
+                    msg = st.toast(f"OK - Successfully scrapped {store_name_arg} data({time_format(start_time)}s)")
                 #     #st.session_state["loaded_stores"][store_name_arg] = "OK"
                     tmp_store_states[store_name_arg]= f"OK ({round(time.time()-start_time,2)}s)"
             except Exception as e:
@@ -91,9 +91,13 @@ def scrap_complete_data(list_of_stores:list=None):
 
         total_df = Scrapper.map_sizes(pd.DataFrame(complete_data))
         total_df = Scrapper.map_prices(total_df)
-        total_df["price"] = total_df["price"].fillna('-1').apply(lambda x:'-1' if x=='' else x).astype(float)
 
+        def drop_all_odd(value):
+            return re.subn(r"\.", "", value, 1)[0]
 
+        total_df["price"] = total_df["price"].fillna('-1').apply(lambda x:'-1' if x=='' else drop_all_odd(x)).astype(float)
+
+        re.sub(r"\.","","aa.bb.c")
         st.session_state["complete_df"] = total_df#.astype(str)
         st.session_state["filtered_df"] = total_df#.astype(str)
         st.session_state["complete_df"].to_excel("my_silly_database.xlsx",index=False)
@@ -134,7 +138,7 @@ def try_to_retrieve_data():
         st.rerun()
     except FileNotFoundError as e:
         #Failed to get the file
-        st.warning("No data loaded :(.  Trying to do it now... (may take up to 20 seconds)")
+        st.warning("No data loaded :(.  Trying to do it now... (may take up to couple of minutes)")
         #Attempt to load the data
         scrap_complete_data()
         #Data is loaded
@@ -198,9 +202,13 @@ DATA_PULL_TOTAL_TIME=0
 
 try:
     st.subheader("Stores currently available :)")
-    cols = st.columns(len(st.session_state["loaded_stores"]))
+    total_amount_of_stores = len(st.session_state["loaded_stores"])
+    cols = st.columns(8)
     count=0
     for store,status in st.session_state["loaded_stores"].items():
+        if count==8:
+            count=0
+            cols=st.columns(8)
         with cols[count]:
             if status=="OK":
                 st.success(store)
@@ -208,6 +216,7 @@ try:
                 st.error(store)
             #st.text(f"{store} - {status}")
             count+=1
+
 except Exception as e:
     print(e)
 
@@ -243,7 +252,8 @@ st.markdown("\n")
 st.write(f"Last data refresh: {'None' if 'date_of_last_pull' not in st.session_state.keys() else 
 st.session_state['date_of_last_pull']}")
 #st.button("Refresh current data", on_click=scrap_complete_data,args=[checkboxes],use_container_width=True)
-st.button("Refresh current data", on_click=scrap_complete_data,args=[],use_container_width=True)
+
+
 # else:
 #     ask_for_password()
 
@@ -278,6 +288,7 @@ with col1:
     pref_size = st.multiselect("Enter preferred sizes",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]))
     #
     pref_available = st.checkbox("Show only available")
+
     if pref_size or pref_name or pref_stores or pref_available or pref_region:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
@@ -295,6 +306,7 @@ with col1:
         if pref_size:
             st.session_state["filtered_df"] = st.session_state["filtered_df"][
             st.session_state["filtered_df"]["size"].isin(pref_size)]
+
 
         st.session_state["filtered_df"] = st.session_state["filtered_df"].query("available == True")
 
@@ -334,6 +346,9 @@ def time_format(start_time) -> float:
 #if not st.session_state["pulled_data"]:
 st.markdown("\n")
 
+#if not check_if_last_load_was_at_least_x_minutes_ago(minutes=60):
+is_disabled = check_if_last_load_was_at_least_x_minutes_ago(minutes=60)
+st.button("Refresh current data", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help="Data can be refreshed globally every 60 minutes (if you have proper access). It usually takes up to 2 minutes to have everything loaded" if is_disabled else "Click to refresh data (should take up to 2 minutes)" )
 
 
 #todo pull to local df!!!

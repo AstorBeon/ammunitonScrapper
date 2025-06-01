@@ -445,7 +445,7 @@ def scrap_kaliber() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
+
 
         for page in range(1, total_pages + 1):
             if page == 1:
@@ -567,7 +567,6 @@ def scrap_bestgun() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             if page == 1:
@@ -638,7 +637,6 @@ def scrap_mex_armory() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             if page == 1:
@@ -710,13 +708,13 @@ def scrap_gun_eagle_rusznikarnia() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             if page == 1:
                 url = base_url
             else:
                 url = f'{base_url}?page={page}'
+                print(url)
             # print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
 
@@ -725,7 +723,7 @@ def scrap_gun_eagle_rusznikarnia() -> [dict]:
                 continue
 
             soup = BeautifulSoup(response.text, 'html.parser')
-            product_containers = soup.find_all('div', class_='ListingWierszeKontener')
+            product_containers = soup.find_all('div', class_='ElementListingRamka')
 
             for product in product_containers:
                 content = product.find("div",class_="ProdCena")
@@ -738,6 +736,7 @@ def scrap_gun_eagle_rusznikarnia() -> [dict]:
 
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
                 price = price_tag.get_text(strip=True) if price_tag else ""
+                price = price.replace(" zł","")
                 link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
@@ -858,7 +857,7 @@ def scrap_kwatermistrz() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
+
 
         for page in range(1, total_pages + 1):
             if page == 1:
@@ -884,7 +883,7 @@ def scrap_kwatermistrz() -> [dict]:
                 availability = product.find("form", class_="availability-notifier")
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
                 price = price_tag.get_text(strip=True) if price_tag else ""
-                print(price)
+
                 price = re.findall(r"Cena:[0-9,]+",price)[0].replace("Cena:","")
                 link = title_tag['href'] if title_tag and title_tag.has_attr('href') else "No link"
                 link = base_url + link
@@ -937,7 +936,6 @@ def scrap_c4guns() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             if page == 1:
@@ -1018,8 +1016,6 @@ def scrap_puchacz() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
-
         for page in range(1, total_pages + 1):
             if page == 1:
                 url = base_url
@@ -1106,7 +1102,6 @@ def scrap_rparms() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             if page == 1:
@@ -1314,7 +1309,6 @@ def scrap_gunsmasters() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             if page == 1:
@@ -1395,7 +1389,6 @@ def scrap_knieja() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             if page == 1:
@@ -1482,7 +1475,6 @@ def scrap_atenagun() -> [dict]:
 
             soup = BeautifulSoup(response.text, 'html.parser')
             product_containers = soup.find_all('article')
-            print(len(product_containers))
 
             for product in product_containers:
 
@@ -1539,10 +1531,7 @@ STORES_SCRAPPERS = {
     "RParms":scrap_rparms,
     "Astroclassic":scrap_astorclassic, #Poznań
     "Gunmasters":scrap_gunsmasters, #Wrocław,
-    "Knieja":scrap_knieja #Kraków,
+    "Knieja":scrap_knieja, #Kraków,
     "Atena Gun":scrap_atenagun, #Kraków
 }
-
-for c in scrap_atenagun():
-    print(c)
 
