@@ -11,9 +11,10 @@ headers = {
 }
 
 
-AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9 mm", "308", ".22LR","22LR", "22 LR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT"]
+AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm", "308", ".22LR","22LR", "22 LR","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",
+                        "kal.380Auto","kal.50AE"]
 AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})",r"(\d{1,3}x\d{2})", r"(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
-AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9mm|9MM|9 mm|9 MM|9x19|9 PARA|9 SHORT)":"9mm",
+AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9mm|9MM|9 mm|9 MM|9x19|9 PARA|9 SHORT|9×19)":"9mm",
                                 r"(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr)":".22LR",
                                 r"(308|308Win|308 Win)":".308 Win",}
 
@@ -1513,6 +1514,83 @@ def scrap_atenagun() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+def scrap_snajper() -> [dict]:
+    base_url = 'https://sklepsnajper.pl/kategoria/amunicja/'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        try:
+            return max([int(x.get_text(strip=True)) for x in soup.find("ul",class_="page-numbers").find_all("li") if x.get_text(strip=True).isdigit()])
+        except:
+            return 1
+
+
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        page=1
+        while True:
+
+            url = f'{base_url}/page/{page}/'
+            # print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+            page+=1
+            if response.status_code != 200:
+
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('li', class_="product-type-simple")
+
+            for product in product_containers:
+
+                title_tag = product.find('h2')
+                try:
+                    price = product.find('span', class_='price').get_text(strip=True)
+
+                except:
+                    price='-1'
+
+                #print([x.get_text(strip=True) for x in prices_tag])
+                try:
+                    availibility = product.find("span",class_="ast-shop-product-out-of-stock").get_text(strip=True)
+                    availibility = False
+                except:
+                    availibility = True
+                #availability = product.find("form", class_="availability-notifier")
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+
+                #availibility = "zł" in price
+
+                price = price.replace("Cena:","").replace("zł","").replace("\xa0zł","")
+
+                link = product.find("a")['href']
+
+                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Kraków",
+                    'title': title,
+                    'price': price ,
+                    'link': link,
+                    'size': size,
+                    'available': availibility,
+                    'store': 'Snajper'
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
+
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand,
@@ -1533,5 +1611,5 @@ STORES_SCRAPPERS = {
     "Gunmasters":scrap_gunsmasters, #Wrocław,
     "Knieja":scrap_knieja, #Kraków,
     "Atena Gun":scrap_atenagun, #Kraków
+    "Snajper":scrap_snajper #Kraków
 }
-
