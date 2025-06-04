@@ -1591,6 +1591,75 @@ def scrap_snajper() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+def scrap_coltwroclaw() -> [dict]:
+    base_url = 'https://coltwroclaw.pl/18-amunicja'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        try:
+            return max([int(x.get_text(strip=True)) for x in soup.find("ul",class_="page-list").find_all("li") if x.get_text(strip=True).isdigit()])
+        except:
+            return 1
+
+
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        print(f"Found pages:")
+        for page in range(get_total_pages()):
+
+            url = f'{base_url}?page={page}/'
+
+            response = requests.get(url, headers=headers)
+            page+=1
+            if response.status_code != 200:
+
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('article')
+
+            for product in product_containers:
+
+                title_tag = product.find('h2')
+                try:
+                    price = product.find('div', class_='product-price-and-shipping').get_text(strip=True)
+                except:
+                    price='-1'
+                try:
+                    availibility = product.find("div",class_="product-availability").get_text(strip=True)=="Dostępny"
+                except:
+                    availibility = False
+
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+
+                price = re.sub("[^0-9,\.]","",price)
+
+                link = product.find("a")['href']
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Kraków",
+                    'title': title,
+                    'price': price ,
+                    'link': link,
+                    'size': size,
+                    'available': availibility,
+                    'store': 'Coltwroclaw'
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
+
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand,
@@ -1609,7 +1678,9 @@ STORES_SCRAPPERS = {
     "RParms":scrap_rparms,
     "Astroclassic":scrap_astorclassic, #Poznań
     "Gunmasters":scrap_gunsmasters, #Wrocław,
+    "Colt Wroclaw":scrap_coltwroclaw(), #Wrocław
     "Knieja":scrap_knieja, #Kraków,
     "Atena Gun":scrap_atenagun, #Kraków
     "Snajper":scrap_snajper #Kraków
 }
+
