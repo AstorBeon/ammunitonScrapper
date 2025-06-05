@@ -18,7 +18,8 @@ cities_per_region = {"Mazowieckie":["Warsaw","Płock","Siedlce","Ostrołęka","C
                      "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice","Aleksandrów Łódzki"],
                      "Wielkopolskie": ["Poznań"],
                      "Dolnośląskie":["Wrocław"],
-                     "Małopolskie":["Kraków"]}
+                     "Małopolskie":["Kraków"],
+                     "Lubelskie":["Lublin"]}
 
 
 

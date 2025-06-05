@@ -11,7 +11,7 @@ headers = {
 }
 
 
-AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm", "308", ".22LR","22LR", "22 LR","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",
+AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm", "308", ".22LR","22LR", "22 LR",".22","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",".300 BLK",".300",
                         "kal.380Auto","kal.50AE"]
 AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})",r"(\d{1,3}x\d{2})", r"(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
 AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9mm|9MM|9 mm|9 MM|9x19|9 PARA|9 SHORT|9×19)":"9mm",
@@ -1660,11 +1660,78 @@ def scrap_coltwroclaw() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+def scrap_vismag() -> [dict]:
+    base_url = 'https://bron-sklep.pl/11-amunicja'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        try:
+            return max([int(x.get_text(strip=True)) for x in soup.find("ul",class_="pagination").find_all("li") if x.get_text(strip=True).isdigit()])
+        except:
+            return 1
+
+
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        print(f"Found pages:")
+        for page in range(get_total_pages()):
+
+            url = f'{base_url}?p={page}/'
+
+            response = requests.get(url, headers=headers)
+            page+=1
+            if response.status_code != 200:
+
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all("li",class_="ajax_block_product")
+
+            for product in product_containers:
+
+                title_tag = product.find('div',class_="product_name")
+                try:
+                    price = product.find('p', class_='price_container').get_text(strip=True)
+                except:
+                    price='-1'
+
+                availibility = "?"
+
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+
+                price = re.sub("[^0-9,\.]","",price)
+
+                link = product.find("a")['href']
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Lublin",
+                    'title': title,
+                    'price': price ,
+                    'link': link,
+                    'size': size,
+                    'available': availibility,
+                    'store': 'Vismag'
+                })
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
+
 
 STORES_SCRAPPERS = {
-    "Garand":scrap_garand,
-    "Top gun":scrap_top_gun,
-    "Strefa Celu":scrap_strefa_celu,
+    "Garand":scrap_garand, #Warszawa
+    "Top gun":scrap_top_gun, #Warszawa
+    "Strefa Celu":scrap_strefa_celu, #Warszawa
     "JM Bron":scrap_jmbron,
     "Magazyn uzbrojenia":scrap_magazynuzbrojenia,
     "Kaliber":scrap_kaliber,
@@ -1681,6 +1748,6 @@ STORES_SCRAPPERS = {
     "Colt Wroclaw":scrap_coltwroclaw(), #Wrocław
     "Knieja":scrap_knieja, #Kraków,
     "Atena Gun":scrap_atenagun, #Kraków
-    "Snajper":scrap_snajper #Kraków
+    "Snajper":scrap_snajper, #Kraków
+    "Vismag":scrap_vismag #Lublin
 }
-
