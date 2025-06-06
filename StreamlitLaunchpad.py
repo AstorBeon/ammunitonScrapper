@@ -40,7 +40,7 @@ def check_if_last_load_was_at_least_x_minutes_ago(minutes:int):
 def scrap_complete_data(list_of_stores:list=None):
 
 
-    st.toast("Data pull started. It may take up couple of minutes. Sit tight :)")
+    st.toast("Odświeżanie danych rozpoczęte. Może zająć do kilku minut. Cierpliwości :)")
     global DATA_PULL_TOTAL_TIME
     DATA_PULL_TOTAL_TIME=0
     start = time.time()
@@ -103,7 +103,7 @@ def scrap_complete_data(list_of_stores:list=None):
         st.session_state["filtered_df"] = total_df#.astype(str)
         st.session_state["complete_df"].to_excel("my_silly_database.xlsx",index=False)
         st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx") + timedelta(hours=2).total_seconds())
-
+        st.balloons()
         global COMPLETE_DATA
         #st.rerun()
 
@@ -176,8 +176,9 @@ if  "manual_read" in st.session_state.keys() and st.session_state["manual_read"]
 
 
 # Title
-st.title("Find ammo in Warsaw!")
-st.subheader("Nifty scrapper collecting data about ammo prices in Warsaw")
+st.title("Polskie pestki")
+
+st.subheader(f"Zebrane ceny amunicji z {len(Scrapper.STORES_SCRAPPERS)} sklepów w Polsce!")
 
 title_alignment="""
 <style>
@@ -202,7 +203,7 @@ LOADED_STORES = []
 DATA_PULL_TOTAL_TIME=0
 
 try:
-    st.subheader("Stores currently available :)")
+    st.subheader("Obecnie dostępne sklepy :)")
     total_amount_of_stores = len(st.session_state["loaded_stores"])
     cols = st.columns(8)
     count=0
@@ -250,7 +251,7 @@ st.markdown("\n")
 # st.markdown("\n")
 st.markdown("\n")
 #if "passok" in st.session_state.keys() and st.session_state["passok"]:
-st.write(f"Last data refresh: {'None' if 'date_of_last_pull' not in st.session_state.keys() else 
+st.write(f"Ostatnie odświeżenie danych: {'Brak' if 'date_of_last_pull' not in st.session_state.keys() else 
 st.session_state['date_of_last_pull']}")
 #st.button("Refresh current data", on_click=scrap_complete_data,args=[checkboxes],use_container_width=True)
 
@@ -270,25 +271,25 @@ with col1:
     if pref_region:
 
         cities = [x for xskey, xs in cities_per_region.items() for x in xs if xskey in pref_region]
-        pref_city = st.multiselect("City",cities)
+        pref_city = st.multiselect("Miasto",cities)
     else:
-        pref_city = st.multiselect("City",[x for xs in  cities_per_region.values() for x in xs])
+        pref_city = st.multiselect("Miasto",[x for xs in  cities_per_region.values() for x in xs])
 
 
 
 
-    pref_name = st.text_input("Enter complete/partial name (title)")
+    pref_name = st.text_input("Podaj pełną/częściową nazwę")
 
     # if pref_name:
     #     st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
     #     #print(f"New length : {len(st.session_state['filtered_df'])}")
     #
-    pref_stores = st.multiselect("Preferred stores",list(Scrapper.STORES_SCRAPPERS.keys()))
+    pref_stores = st.multiselect("Wybrane sklepy",list(Scrapper.STORES_SCRAPPERS.keys()))
 
 
-    pref_size = st.multiselect("Enter preferred sizes",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]))
+    pref_size = st.multiselect("Wybierz kaliber/rozmiar",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]))
     #
-    pref_available = st.checkbox("Show only available")
+    pref_available = st.checkbox("Pokaż tylko dostępne")
 
     if pref_size or pref_name or pref_stores or pref_available or pref_region:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
@@ -318,8 +319,8 @@ with col1:
 with col2:
     #if "passok" in st.session_state.keys() and st.session_state["passok"]:
     st.dataframe(st.session_state["filtered_df"])
-    st.text(f"Amount of filtered records: {len(st.session_state["filtered_df"])}")
-    st.text(f"Amount of total records: {len(st.session_state["complete_df"])}")
+    st.text(f"Ilość przefiltrowanych rekordów: {len(st.session_state["filtered_df"])}")
+    st.text(f"Całkowita ilość rekordów: {len(st.session_state["complete_df"])}")
 
 
 def time_format(start_time) -> float:
@@ -348,8 +349,8 @@ def time_format(start_time) -> float:
 st.markdown("\n")
 
 #if not check_if_last_load_was_at_least_x_minutes_ago(minutes=60):
-is_disabled = check_if_last_load_was_at_least_x_minutes_ago(minutes=60)
-st.button("Refresh current data", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help="Data can be refreshed globally every 60 minutes (if you have proper access). It usually takes up to 2 minutes to have everything loaded" if is_disabled else "Click to refresh data (should take up to 2 minutes)" )
+is_disabled = not check_if_last_load_was_at_least_x_minutes_ago(minutes=720)
+st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help="Data can be refreshed globally every 60 minutes (if you have proper access). It usually takes up to 2 minutes to have everything loaded" if is_disabled else "Click to refresh data (should take up to 2 minutes)" )
 
 
-#todo pull to local df!!!
+st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")
