@@ -52,7 +52,7 @@ def map_single_size(size:str):
     return size
 
 def trim_price(price_text:str) -> str:
-    return re.sub(r"[^0-9,\.]","",price_text).replace(",",".")
+    return re.sub(r"[^0-9,\\.]","",price_text).replace(",",".")
 
 
 def clean_other_than_nums(text):
