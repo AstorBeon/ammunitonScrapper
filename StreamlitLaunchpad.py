@@ -21,7 +21,10 @@ cities_per_region = {"Mazowieckie":["Warsaw","Płock","Siedlce","Ostrołęka","C
                      "Małopolskie":["Kraków"],
                      "Lubelskie":["Lublin"]}
 
-
+if "loaded_stores" not in st.session_state.keys():
+    all_pulled_stores = list(Scrapper.STORES_SCRAPPERS.keys())
+    st.session_state["loaded_stores"] = {skey: "OK" if skey in all_pulled_stores else "Err" for skey in
+                                         Scrapper.STORES_SCRAPPERS.keys()}
 
 if "date_of_last_pull" not in st.session_state.keys():
     st.session_state["date_of_last_pull"] = "None"
@@ -39,7 +42,8 @@ def check_if_last_load_was_at_least_x_minutes_ago(minutes:int):
 
 def scrap_complete_data(list_of_stores:list=None):
 
-
+    if "loaded_stores" not in st.session_state.keys():
+        st.session_state["loaded_stores"] = {}
     st.toast("Odświeżanie danych rozpoczęte. Może zająć do kilku minut. Cierpliwości :)")
     global DATA_PULL_TOTAL_TIME
     DATA_PULL_TOTAL_TIME=0
@@ -74,6 +78,8 @@ def scrap_complete_data(list_of_stores:list=None):
             except Exception as e:
                 print(e)
                 print(traceback.print_exc())
+                if "loaded_stores" not in st.session_state.keys():
+                    st.session_state["loaded_stores"] = {}
                 msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data({round(time_format(start_time))}s)")
                 st.session_state["loaded_stores"][store_name_arg] = "ERROR"
 
@@ -87,16 +93,24 @@ def scrap_complete_data(list_of_stores:list=None):
     #DATA_PULL_TOTAL_TIME = Scrapper.
     #st.session_state["complete_data"]
     st.session_state["loaded_stores"] = tmp_store_states
-    st.success(f"Complete scraping took {round(time.time()-start,2)}s")
+    st.success(f"Aktualizacja danych zajeła: {round(time.time()-start,2)}s")
     try:
-
+        #print(complete_data)
         total_df = Scrapper.map_sizes(pd.DataFrame(complete_data))
         total_df = Scrapper.map_prices(total_df)
 
         def drop_all_odd(value):
-            return re.subn(r"\.", "", value, 1)[0]
 
-        total_df["price"] = total_df["price"].fillna('-1').apply(lambda x:'-1' if x=='' else drop_all_odd(x)).astype(float)
+            subval =  re.subn(r"[^0-9,\\.]", "", value, count=1)[0].replace(".00","")
+            if subval.count(".")==2:
+                subval = re.sub(r"\.[0-9]{2}\.?$","",subval)
+            return subval
+
+
+
+        total_df["price"] = pd.to_numeric(total_df["price"].fillna('-1').apply(lambda x:'-1' if x=='' else drop_all_odd(x)),errors='coerce').fillna('-1')
+
+        total_df['available'] = total_df['available'].apply(lambda x: "T" if x==True else ("N" if x==False else "?"))
 
         re.sub(r"\.","","aa.bb.c")
         st.session_state["complete_df"] = total_df#.astype(str)
@@ -104,7 +118,10 @@ def scrap_complete_data(list_of_stores:list=None):
         st.session_state["complete_df"].to_excel("my_silly_database.xlsx",index=False)
         st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx") + timedelta(hours=2).total_seconds())
         st.balloons()
+        st.session_state["loaded_stores"] = {skey: "OK" if skey in st.session_state["complete_df"]["store"].to_list() else "Err" for skey in
+                                             Scrapper.STORES_SCRAPPERS.keys()}
         global COMPLETE_DATA
+
         #st.rerun()
 
     except Exception as e:
@@ -116,6 +133,9 @@ def try_to_retrieve_data():
     try:
         if "complete_df" not in st.session_state.keys():
             st.session_state["complete_df"] = pd.DataFrame()
+        else:
+            st.session_state["loaded_stores"] = {skey: "OK" if skey in list(set(st.session_state["complete_df"]["store"].to_list())) else "Err" for skey in
+                                             Scrapper.STORES_SCRAPPERS.keys()}
 
         data = pd.read_excel("my_silly_database.xlsx")
 
@@ -131,9 +151,6 @@ def try_to_retrieve_data():
         print(st.session_state["date_of_last_pull"])
 
         #Refreshing statuses for stores
-        if "loaded_stores" not in st.session_state.keys():
-            all_pulled_stores = data["store"].to_list()
-            st.session_state["loaded_stores"]={skey:"OK" if skey in all_pulled_stores else "Err" for skey in Scrapper.STORES_SCRAPPERS.keys()}
 
 
         st.rerun()
@@ -310,7 +327,7 @@ with col1:
             st.session_state["filtered_df"]["size"].isin(pref_size)]
 
 
-        st.session_state["filtered_df"] = st.session_state["filtered_df"].query("available == True")
+        st.session_state["filtered_df"] = st.session_state["filtered_df"].query("available == 'T'")
 
 
     else:
@@ -350,7 +367,7 @@ st.markdown("\n")
 
 #if not check_if_last_load_was_at_least_x_minutes_ago(minutes=60):
 is_disabled = False#not check_if_last_load_was_at_least_x_minutes_ago(minutes=720)
-st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help="Data can be refreshed globally every 60 minutes (if you have proper access). It usually takes up to 2 minutes to have everything loaded" if is_disabled else "Click to refresh data (should take up to 2 minutes)" )
+st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help="Data can be refreshed globally every 60 minutes (if you have proper access). It usually takes up to 2 minutes to have everything loaded" if is_disabled else "Naciśnij aby przeładować dane (powinno zająć do dwóch minut)" )
 
 
 st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")

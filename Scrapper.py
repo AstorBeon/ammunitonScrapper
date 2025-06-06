@@ -1641,7 +1641,7 @@ def scrap_coltwroclaw() -> [dict]:
 
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
 
-                price = re.sub("[^0-9,\.]","",price)
+                price = re.sub(r"[^0-9,\.]","",price)
 
                 link = product.find("a")['href']
                 title, size = extract_data_from_title(title)
@@ -1708,7 +1708,7 @@ def scrap_vismag() -> [dict]:
 
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
 
-                price = re.sub("[^0-9,\.]","",price)
+                price = re.sub(r"[^0-9,\.]","",price)
 
                 link = product.find("a")['href']
                 title, size = extract_data_from_title(title)
@@ -1751,3 +1751,5 @@ STORES_SCRAPPERS = {
     "Snajper":scrap_snajper, #Kraków
     "Vismag":scrap_vismag #Lublin
 }
+
+
