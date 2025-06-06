@@ -349,7 +349,7 @@ def time_format(start_time) -> float:
 st.markdown("\n")
 
 #if not check_if_last_load_was_at_least_x_minutes_ago(minutes=60):
-is_disabled = not check_if_last_load_was_at_least_x_minutes_ago(minutes=720)
+is_disabled = False#not check_if_last_load_was_at_least_x_minutes_ago(minutes=720)
 st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help="Data can be refreshed globally every 60 minutes (if you have proper access). It usually takes up to 2 minutes to have everything loaded" if is_disabled else "Click to refresh data (should take up to 2 minutes)" )
 
 
