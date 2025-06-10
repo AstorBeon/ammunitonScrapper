@@ -42,6 +42,11 @@ def check_if_last_load_was_at_least_x_minutes_ago(minutes:int):
 
 def scrap_complete_data(list_of_stores:list=None):
 
+    if "adminpass" not in st.session_state.keys():
+        ask_for_password()
+        return
+
+    st.toast("Zbieranie wymagań")
     if "loaded_stores" not in st.session_state.keys():
         st.session_state["loaded_stores"] = {}
     st.toast("Odświeżanie danych rozpoczęte. Może zająć do kilku minut. Cierpliwości :)")
@@ -174,17 +179,20 @@ def quick_instruction():
     st.write("It'll take up to 15 secs")
 
 
-# @st.dialog("Provide pass")
-# def ask_for_password():
-#
-#     st.write(f"What's the password?")
-#     reason = st.text_input("Password:")
-#
-#     if st.button("Submit"):
-#         st.session_state["passok"] = reason=="gunlobby"
-#         st.session_state["manual_read"] = False
-#
-#         st.rerun()
+@st.dialog("Polskie pestki")
+def ask_for_password():
+
+    st.write(f"Podaj hasło admina")
+    reason = st.text_input("")
+
+    if st.button("Submit"):
+        if not reason=="gunlobby":
+            st.toast("Tylko admin może chwilowo odświeżać dane")
+        else:
+            st.toast("Hasło zaakceptowane!")
+            st.session_state["adminpass"]=True
+        st.rerun()
+
 
 if  "manual_read" in st.session_state.keys() and st.session_state["manual_read"]:
     st.session_state["manual_read"] = True
@@ -367,7 +375,7 @@ st.markdown("\n")
 
 #if not check_if_last_load_was_at_least_x_minutes_ago(minutes=60):
 is_disabled = False#not check_if_last_load_was_at_least_x_minutes_ago(minutes=720)
-st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help="Data can be refreshed globally every 60 minutes (if you have proper access). It usually takes up to 2 minutes to have everything loaded" if is_disabled else "Naciśnij aby przeładować dane (powinno zająć do dwóch minut)" )
+st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help= "Naciśnij aby przeładować dane (powinno zająć do dwóch minut)" )
 
 
 st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")

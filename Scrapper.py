@@ -538,7 +538,7 @@ def scrap_salonbroni() -> [dict]:
 
     products = []
 
-    for i in range(1, pages):
+    for i in range(1, pages+1):
         products.extend(scrape_products(i))
     # Run the scraper
     return products
@@ -1613,8 +1613,9 @@ def scrap_coltwroclaw() -> [dict]:
     # Function to scrape product data
     def scrape_all_products():
         products_data = []
-        print(f"Found pages:")
-        for page in range(get_total_pages()):
+        pages = get_total_pages()
+        print(f"Found pages: {pages}")
+        for page in range(pages):
 
             url = f'{base_url}?page={page}/'
 
@@ -1652,7 +1653,7 @@ def scrap_coltwroclaw() -> [dict]:
                     'link': link,
                     'size': size,
                     'available': availibility,
-                    'store': 'Coltwroclaw'
+                    'store': 'Colt Wroclaw'
                 })
 
         return products_data
@@ -1732,17 +1733,17 @@ STORES_SCRAPPERS = {
     "Garand":scrap_garand, #Warszawa
     "Top gun":scrap_top_gun, #Warszawa
     "Strefa Celu":scrap_strefa_celu, #Warszawa
-    "JM Bron":scrap_jmbron,
-    "Magazyn uzbrojenia":scrap_magazynuzbrojenia,
-    "Kaliber":scrap_kaliber,
-    "Salon broni":scrap_salonbroni,
-    "Best gun":scrap_bestgun,
-    "Mex armory": scrap_mex_armory,
-    "Gun eagle rusznikarnia": scrap_gun_eagle_rusznikarnia,
-    "Top shot": scrap_top_shot,
-    "Kwatermistrz":scrap_kwatermistrz,
-    "C4guns":scrap_c4guns,
-    "RParms":scrap_rparms,
+    "JM Bron":scrap_jmbron, #Warszawa
+    "Magazyn uzbrojenia":scrap_magazynuzbrojenia, #Warszawa
+    "Kaliber":scrap_kaliber, #Warszawa
+    "Salon broni":scrap_salonbroni, #Warszawa
+    "Best gun":scrap_bestgun, #Ciechanów
+    "Mex armory": scrap_mex_armory, #Warszawa
+    "Gun eagle rusznikarnia": scrap_gun_eagle_rusznikarnia, #Ostrołęka
+    "Top shot": scrap_top_shot, #Łódź
+    "Kwatermistrz":scrap_kwatermistrz, #Łódź
+    "C4guns":scrap_c4guns, #Piotrków Trybunalski
+    "RParms":scrap_rparms, #Aleksandrów Łódzki
     "Astroclassic":scrap_astorclassic, #Poznań
     "Gunmasters":scrap_gunsmasters, #Wrocław,
     "Colt Wroclaw":scrap_coltwroclaw(), #Wrocław
