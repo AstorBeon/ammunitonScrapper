@@ -342,7 +342,11 @@ with col1:
 
 with col2:
     #if "passok" in st.session_state.keys() and st.session_state["passok"]:
-    st.dataframe(st.session_state["filtered_df"])
+    st.dataframe(st.session_state["filtered_df"],
+                 column_config={"link": st.column_config.LinkColumn(
+            "link", display_text="Oferta"
+        )
+    })
     st.text(f"Ilość przefiltrowanych rekordów: {len(st.session_state["filtered_df"])}")
     st.text(f"Całkowita ilość rekordów: {len(st.session_state["complete_df"])}")
 
