@@ -46,7 +46,6 @@ def scrap_complete_data(list_of_stores:list=None):
         ask_for_password()
         return
 
-    st.toast("Zbieranie wymagań")
     if "loaded_stores" not in st.session_state.keys():
         st.session_state["loaded_stores"] = {}
     st.toast("Odświeżanie danych rozpoczęte. Może zająć do kilku minut. Cierpliwości :)")
@@ -113,7 +112,7 @@ def scrap_complete_data(list_of_stores:list=None):
 
 
 
-        total_df["price"] = pd.to_numeric(total_df["price"].fillna('-1').apply(lambda x:'-1' if x=='' else drop_all_odd(x)),errors='coerce').fillna('-1')
+        total_df["price"] = pd.to_numeric(total_df["price"].fillna('-1.0').apply(lambda x:'-1' if x=='' else drop_all_odd(x)),errors='coerce').fillna('-1')
 
         total_df['available'] = total_df['available'].apply(lambda x: "T" if x==True else ("N" if x==False else "?"))
 
@@ -201,7 +200,7 @@ if  "manual_read" in st.session_state.keys() and st.session_state["manual_read"]
 
 
 # Title
-st.title("Polskie pestki")
+st.title("🌱 Polskie pestki 🌱")
 
 st.subheader(f"Zebrane ceny amunicji z {len(Scrapper.STORES_SCRAPPERS)} sklepów w Polsce!")
 

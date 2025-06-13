@@ -14,9 +14,11 @@ headers = {
 AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM","223REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm", "308", ".22LR","22LR", "22 LR",".22","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",".300 BLK",".300",
                         "kal.380Auto","kal.50AE"]
 AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})",r"(\d{1,3}x\d{2})", r"(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
-AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9mm|9MM|9 mm|9 MM|9x19|9 PARA|9 SHORT|9×19)":"9mm",
+AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9|9mm|9MM|9 mm|9 MM|9x19|9 PARA|9 SHORT|9×19)":"9mm",
                                 r"(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr)":".22LR",
                                 r"(308|308Win|308 Win)":".308 Win",}
+
+requests.packages.urllib3.disable_warnings()
 
 def extract_data_from_title(title:str) -> (str,str):
     size = "?"
@@ -1413,7 +1415,7 @@ def scrap_knieja() -> [dict]:
                     price = product.find('span', class_='price').get_text(strip=True)
                     availibility=True
                 except:
-                    price='-1'
+                    price='-1.0'
                     availibility = False
                 #print([x.get_text(strip=True) for x in prices_tag])
 
@@ -1484,7 +1486,7 @@ def scrap_atenagun() -> [dict]:
                     price = product.find('span', class_='woocommerce-Price-amount').get_text(strip=True)
 
                 except:
-                    price='-1'
+                    price='-1.0'
 
                 #print([x.get_text(strip=True) for x in prices_tag])
                 availibility = product.find("div",class_="stock").get_text(strip=True) == "w magazynie"
@@ -1557,7 +1559,7 @@ def scrap_snajper() -> [dict]:
                     price = product.find('span', class_='price').get_text(strip=True)
 
                 except:
-                    price='-1'
+                    price='-1.0'
 
                 #print([x.get_text(strip=True) for x in prices_tag])
                 try:
@@ -1634,7 +1636,7 @@ def scrap_coltwroclaw() -> [dict]:
                 try:
                     price = product.find('div', class_='product-price-and-shipping').get_text(strip=True)
                 except:
-                    price='-1'
+                    price='-1.0'
                 try:
                     availibility = product.find("div",class_="product-availability").get_text(strip=True)=="Dostępny"
                 except:
@@ -1703,7 +1705,7 @@ def scrap_vismag() -> [dict]:
                 try:
                     price = product.find('p', class_='price_container').get_text(strip=True)
                 except:
-                    price='-1'
+                    price='-1.0'
 
                 availibility = "?"
 
@@ -1746,7 +1748,7 @@ STORES_SCRAPPERS = {
     "RParms":scrap_rparms, #Aleksandrów Łódzki
     "Astroclassic":scrap_astorclassic, #Poznań
     "Gunmasters":scrap_gunsmasters, #Wrocław,
-    "Colt Wroclaw":scrap_coltwroclaw(), #Wrocław
+    "Colt Wroclaw":scrap_coltwroclaw, #Wrocław
     "Knieja":scrap_knieja, #Kraków,
     "Atena Gun":scrap_atenagun, #Kraków
     "Snajper":scrap_snajper, #Kraków
