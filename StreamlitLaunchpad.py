@@ -60,6 +60,7 @@ def scrap_complete_data(list_of_stores:list=None):
 
     thread_list = []
     tmp_store_states = {key:"?" for key in Scrapper.STORES_SCRAPPERS.keys()}
+
     for store_name, store_scrap in Scrapper.STORES_SCRAPPERS.items():
         if store_name in excluded_stores:
             continue
@@ -102,6 +103,8 @@ def scrap_complete_data(list_of_stores:list=None):
         #print(complete_data)
         total_df = Scrapper.map_sizes(pd.DataFrame(complete_data))
         total_df = Scrapper.map_prices(total_df)
+        exclude_regex = r"(Pudełko|Pudelko|pudełko|pudelko|Opakowanie|opakowanie)"
+        total_df = total_df[~total_df['title'].str.contains(exclude_regex, regex=True)]
 
         def drop_all_odd(value):
 
@@ -378,7 +381,9 @@ st.markdown("\n")
 
 #if not check_if_last_load_was_at_least_x_minutes_ago(minutes=60):
 is_disabled = False#not check_if_last_load_was_at_least_x_minutes_ago(minutes=720)
-st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help= "Naciśnij aby przeładować dane (powinno zająć do dwóch minut)" )
+params = st._get_query_params()
+if "admin" in params.keys() and params["admin"]:
+    st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help= "Naciśnij aby przeładować dane (powinno zająć do dwóch minut)" )
 
 
 st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")
