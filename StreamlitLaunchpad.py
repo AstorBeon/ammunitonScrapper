@@ -313,7 +313,7 @@ with col1:
     #     st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
     #     #print(f"New length : {len(st.session_state['filtered_df'])}")
     #
-    pref_stores = st.multiselect("Wybrane sklepy",list(Scrapper.STORES_SCRAPPERS.keys()))
+    pref_stores = st.multiselect("Wybrane sklepy",sorted(list(Scrapper.STORES_SCRAPPERS.keys())))
 
 
     pref_size = st.multiselect("Wybierz kaliber/rozmiar",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]))
