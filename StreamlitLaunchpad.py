@@ -234,7 +234,9 @@ try:
     total_amount_of_stores = len(st.session_state["loaded_stores"])
     cols = st.columns(8)
     count=0
-    for store,status in st.session_state["loaded_stores"].items():
+    stores = list(st.session_state["loaded_stores"].items())
+    stores.sort(key=lambda x:x[0].lower())
+    for store,status in stores:
         if count==8:
             count=0
             cols=st.columns(8)
