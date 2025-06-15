@@ -4,9 +4,11 @@
 
 Uwagi z braterstwa:
 -Odrzucić pojemniki na amunicję
--Sortowanie sklepów alfabetycznie
+Done -Sortowanie sklepów alfabetycznie
 -Ustandaryzować nazewnictwo (polski vs angielski)
 DONE -Schować guzik do odświeżania
 -Jasno oznaczyć brak ceny (nie -1)
 -Spróbować uzyskać ceny, nawet jak nie są dostępne na głównej stronie
 -Pogrupować kalibry
+
+-vismag - fix for availibility check (additonal requests :( )

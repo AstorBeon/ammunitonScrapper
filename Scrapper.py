@@ -11,12 +11,16 @@ headers = {
 }
 
 
-AVAILABLE_AMMO_SIZES = ["762x25","243Win","30-30 WIN",".222 REM","223 REM","223REM",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm", "308", ".22LR","22LR", "22 LR",".22","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",".300 BLK",".300",
-                        "kal.380Auto","kal.50AE"]
+AVAILABLE_AMMO_SIZES = ["762x25","243Win","7×64","30-30 WIN",".222 REM","223 REM","223REM","223Rem","338 Win.",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm", "308", ".22LR","22LR", "22 LR",".22","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",".300 BLK",".300",
+                        "kal.380Auto","kal.50AE", ".30","0.38",".38","12/76","22lr","300 AAC","9x19MM",".25","6.5","12/67","12/76","7,63",
+                        "kal.32",".17","30-06"]
 AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})",r"(\d{1,3}x\d{2})", r"(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
-AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9|9mm|9MM|9 mm|9 MM|9x19|9 PARA|9 SHORT|9×19)":"9mm",
-                                r"(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr)":".22LR",
-                                r"(308|308Win|308 Win)":".308 Win",}
+AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9|9mm|9MM|9 mm|9 MM|9x19|9 PARA|9 SHORT|9×19|9x19MM)":"9mm",
+                                r"(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr|22lr)":".22LR",
+                                r"(308|308Win|308 Win)":".308 Win",
+                                r"(38|0.38|kal. 38Spec|38Spec|.38)":"38 Special",
+                                r"223 ?(REM|Rem|rem)":".223 Rem",
+                                r"\.?338 ?(Win.)?":"338 Win"}
 
 requests.packages.urllib3.disable_warnings()
 
@@ -124,7 +128,7 @@ def scrap_top_gun() -> [dict]:
                 title,size = extract_data_from_title(title)
 
                 products_data.append({
-                    "city":"Warsaw",
+                    "city":"Warszawa",
                     'store':"Top gun",
                     'title': title,
                     'link': link,
@@ -194,7 +198,7 @@ def scrap_strefa_celu() -> [dict]:
                 title,size = extract_data_from_title(title)
 
                 products_data.append({
-                    "city": "Warsaw",
+                    "city": "Warszawa",
                     'title': title,
                     "size":size,
                     'store':"Strefa Celu",
@@ -268,7 +272,7 @@ def scrap_garand() -> [dict]:
                 title,size = extract_data_from_title(title)
 
                 products_data.append({
-                    "city": "Warsaw",
+                    "city": "Warszawa",
                     'title': title,
                     'size':size,
                     'store':"Garand",
@@ -342,7 +346,7 @@ def scrap_jmbron() -> [dict]:
                 availability = availability_tag.get_text(strip=True)=="Na stanie" if availability_tag else False
                 title,size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Warsaw",
+                    "city": "Warszawa",
                     'title': title,
                     'price': price,
                     'link': link,
@@ -409,7 +413,7 @@ def scrap_magazynuzbrojenia() -> [dict]:
                     if availability_tag else "Availability unknown"
                 title,size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Warsaw",
+                    "city": "Warszawa",
                     'title': title,
                     'price': price,
                     'size':size,
@@ -478,9 +482,9 @@ def scrap_kaliber() -> [dict]:
                 #availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title,size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Warsaw",
+                    "city": "Warszawa",
                     'title': title,
-                    'price': price,
+                    'price': "?",
                     'link': link,
                     'size':size,
                     'available': availability,
@@ -526,7 +530,7 @@ def scrap_salonbroni() -> [dict]:
             #availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
             title,size = extract_data_from_title(title)
             products_data.append({
-                "city": "Warsaw",
+                "city": "Warszawa",
                 'title': title,
                 'price': price,
                 'size':size,
@@ -664,7 +668,8 @@ def scrap_mex_armory() -> [dict]:
 
                 link_tag = product.find('a')
 
-                availability = product.find("div",class_="out-of-stock-label")
+                availability = False if product.find("div",class_="out-of-stock-label") else True
+
 
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
                 price = price_tag.get_text(strip=True) if price_tag else ""
@@ -969,7 +974,7 @@ def scrap_c4guns() -> [dict]:
                 #print(price)
                 price = price.replace(" zł:","")
                 link = link_tag['href'] if link_tag and link_tag.has_attr('href') else "No link"
-                link = base_url + link
+
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
@@ -1685,7 +1690,7 @@ def scrap_vismag() -> [dict]:
     # Function to scrape product data
     def scrape_all_products():
         products_data = []
-        print(f"Found pages:")
+
         for page in range(get_total_pages()):
 
             url = f'{base_url}?p={page}/'
@@ -1707,13 +1712,19 @@ def scrap_vismag() -> [dict]:
                 except:
                     price='-1.0'
 
-                availibility = "?"
+                #availibility = "?"
 
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
 
                 price = re.sub(r"[^0-9,\.]","",price)
 
                 link = product.find("a")['href']
+
+                #Additional check for availibility
+                resp = requests.get(link, headers=headers)
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                availibility = soup.find("span",{"id":"availability_value"}).get_text(strip=True) == "Ten produkt nie występuje już w magazynie"
+
                 title, size = extract_data_from_title(title)
                 products_data.append({
                     "city": "Lublin",
@@ -1724,6 +1735,7 @@ def scrap_vismag() -> [dict]:
                     'available': availibility,
                     'store': 'Vismag'
                 })
+
 
         return products_data
 
@@ -1754,5 +1766,11 @@ STORES_SCRAPPERS = {
     "Snajper":scrap_snajper, #Kraków
     "Vismag":scrap_vismag #Lublin
 }
+
+
+
+for c in scrap_vismag():
+    print(c)
+
 
 
