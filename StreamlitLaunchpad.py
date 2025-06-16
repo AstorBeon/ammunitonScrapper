@@ -21,10 +21,13 @@ cities_per_region = {"Mazowieckie":["Warsaw","Płock","Siedlce","Ostrołęka","C
                      "Małopolskie":["Kraków"],
                      "Lubelskie":["Lublin"]}
 
-if "loaded_stores" not in st.session_state.keys():
-    all_pulled_stores = list(Scrapper.STORES_SCRAPPERS.keys())
-    st.session_state["loaded_stores"] = {skey: "OK" if skey in all_pulled_stores else "Err" for skey in
-                                         Scrapper.STORES_SCRAPPERS.keys()}
+# if "loaded_stores" not in st.session_state.keys():
+#     all_pulled_stores = list(Scrapper.STORES_SCRAPPERS.keys())
+#     stores_in_datast = list(st.session_state.keys())
+#     print("Loaded stores not in session state")
+#     st.session_state["loaded_stores"] = {skey:  "Err"
+#                                          for skey in
+#                                          Scrapper.STORES_SCRAPPERS.keys()}
 
 if "date_of_last_pull" not in st.session_state.keys():
     st.session_state["date_of_last_pull"] = "None"
@@ -115,7 +118,7 @@ def scrap_complete_data(list_of_stores:list=None):
 
 
 
-        total_df["price"] = pd.to_numeric(total_df["price"].fillna('-1.0').apply(lambda x:'-1' if x=='' else drop_all_odd(x)),errors='coerce').fillna('-1')
+        total_df["price"] = pd.to_numeric(total_df["price"].fillna('').apply(lambda x: drop_all_odd(x)),errors='coerce')#.fillna('-1')
 
         total_df['available'] = total_df['available'].apply(lambda x: "T" if x==True else ("N" if x==False else "?"))
 
@@ -139,10 +142,9 @@ def scrap_complete_data(list_of_stores:list=None):
 def try_to_retrieve_data():
     try:
         if "complete_df" not in st.session_state.keys():
-            st.session_state["complete_df"] = pd.DataFrame()
-        else:
-            st.session_state["loaded_stores"] = {skey: "OK" if skey in list(set(st.session_state["complete_df"]["store"].to_list())) else "Err" for skey in
-                                             Scrapper.STORES_SCRAPPERS.keys()}
+            st.session_state["complete_df"] = pd.DataFrame(columns=["city","title","price","link","size","available","store"])
+
+
 
         data = pd.read_excel("my_silly_database.xlsx")
 
@@ -155,12 +157,14 @@ def try_to_retrieve_data():
         # with open("last_mod","r") as file:
         #     st.session_state['date_of_last_pull'] = file.read()
 
-        print(st.session_state["date_of_last_pull"])
+
+        st.session_state["loaded_stores"] = {skey: "OK" if skey in list(set(st.session_state["complete_df"]["store"].to_list())) else "Err" for skey in
+                                             Scrapper.STORES_SCRAPPERS.keys()}
 
         #Refreshing statuses for stores
 
 
-        st.rerun()
+        #st.rerun()
     except FileNotFoundError as e:
         #Failed to get the file
         st.warning("No data loaded :(.  Trying to do it now... (may take up to couple of minutes)")
@@ -234,6 +238,7 @@ try:
     total_amount_of_stores = len(st.session_state["loaded_stores"])
     cols = st.columns(8)
     count=0
+
     stores = list(st.session_state["loaded_stores"].items())
     stores.sort(key=lambda x:x[0].lower())
     for store,status in stores:
@@ -384,7 +389,7 @@ st.markdown("\n")
 #if not check_if_last_load_was_at_least_x_minutes_ago(minutes=60):
 is_disabled = False#not check_if_last_load_was_at_least_x_minutes_ago(minutes=720)
 params = st._get_query_params()
-if "admin" in params.keys() and params["admin"]:
+if "admin" in params.keys():
     st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help= "Naciśnij aby przeładować dane (powinno zająć do dwóch minut)" )
 
 

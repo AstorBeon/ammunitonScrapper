@@ -484,7 +484,7 @@ def scrap_kaliber() -> [dict]:
                 products_data.append({
                     "city": "Warszawa",
                     'title': title,
-                    'price': "?",
+                    'price': "",
                     'link': link,
                     'size':size,
                     'available': availability,
@@ -1420,7 +1420,7 @@ def scrap_knieja() -> [dict]:
                     price = product.find('span', class_='price').get_text(strip=True)
                     availibility=True
                 except:
-                    price='-1.0'
+                    price=''
                     availibility = False
                 #print([x.get_text(strip=True) for x in prices_tag])
 
@@ -1491,7 +1491,7 @@ def scrap_atenagun() -> [dict]:
                     price = product.find('span', class_='woocommerce-Price-amount').get_text(strip=True)
 
                 except:
-                    price='-1.0'
+                    price=''
 
                 #print([x.get_text(strip=True) for x in prices_tag])
                 availibility = product.find("div",class_="stock").get_text(strip=True) == "w magazynie"
@@ -1564,7 +1564,7 @@ def scrap_snajper() -> [dict]:
                     price = product.find('span', class_='price').get_text(strip=True)
 
                 except:
-                    price='-1.0'
+                    price=''
 
                 #print([x.get_text(strip=True) for x in prices_tag])
                 try:
@@ -1641,7 +1641,7 @@ def scrap_coltwroclaw() -> [dict]:
                 try:
                     price = product.find('div', class_='product-price-and-shipping').get_text(strip=True)
                 except:
-                    price='-1.0'
+                    price=''
                 try:
                     availibility = product.find("div",class_="product-availability").get_text(strip=True)=="Dostępny"
                 except:
@@ -1710,7 +1710,7 @@ def scrap_vismag() -> [dict]:
                 try:
                     price = product.find('p', class_='price_container').get_text(strip=True)
                 except:
-                    price='-1.0'
+                    price=''
 
                 #availibility = "?"
 
@@ -1768,9 +1768,6 @@ STORES_SCRAPPERS = {
 }
 
 
-
-for c in scrap_vismag():
-    print(c)
 
 
 
