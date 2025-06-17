@@ -14,7 +14,7 @@ import Scrapper
 st.set_page_config(layout="wide")
 
 
-cities_per_region = {"Mazowieckie":["Warsaw","Płock","Siedlce","Ostrołęka","Ciechanów"],
+cities_per_region = {"Mazowieckie":["Warsaw","Płock","Prószków","Siedlce","Ostrołęka","Ciechanów"],
                      "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice","Aleksandrów Łódzki"],
                      "Wielkopolskie": ["Poznań"],
                      "Dolnośląskie":["Wrocław"],
@@ -78,11 +78,17 @@ def scrap_complete_data(list_of_stores:list=None):
                 #     print(f"EMPTY STORE: {store_name_arg}")
                     msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data ({time_format(start_time)}s)")
                 #     #st.session_state["loaded_stores"][store_name_arg] = "ERROR"
+
                     tmp_store_states[store_name_arg]= "ERROR"
                 else:
                     msg = st.toast(f"OK - Successfully scrapped {store_name_arg} data({time_format(start_time)}s)")
                 #     #st.session_state["loaded_stores"][store_name_arg] = "OK"
+
+                    #print(res[0])
+                    # if store_name_arg=="Astroclassic":
+                    #     print(res)
                     tmp_store_states[store_name_arg]= f"OK ({round(time.time()-start_time,2)}s)"
+
             except Exception as e:
                 print(e)
                 print(traceback.print_exc())
@@ -90,6 +96,13 @@ def scrap_complete_data(list_of_stores:list=None):
                     st.session_state["loaded_stores"] = {}
                 msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data({round(time_format(start_time))}s)")
                 st.session_state["loaded_stores"][store_name_arg] = "ERROR"
+
+        thread_list = [x for x in thread_list if x.is_alive()]
+
+        while(len(thread_list)==5):
+            thread_list = [x for x in thread_list if x.is_alive()]
+
+
 
         thread_list.append(Thread(target=pull_single_store,args=[store_name]))
         thread_list[-1].start()
@@ -103,20 +116,26 @@ def scrap_complete_data(list_of_stores:list=None):
     st.session_state["loaded_stores"] = tmp_store_states
     st.success(f"Aktualizacja danych zajeła: {round(time.time()-start,2)}s")
     try:
-        #print(complete_data)
+
         total_df = Scrapper.map_sizes(pd.DataFrame(complete_data))
+
         total_df = Scrapper.map_prices(total_df)
-        exclude_regex = r"(Pudełko|Pudelko|pudełko|pudelko|Opakowanie|opakowanie)"
+
+        exclude_regex = r"[Pp]ude[lł]ko"
+
+
         total_df = total_df[~total_df['title'].str.contains(exclude_regex, regex=True)]
 
         def drop_all_odd(value):
 
             subval =  re.subn(r"[^0-9,\\.]", "", value, count=1)[0].replace(".00","")
+            subval = re.sub("\\.{2}[0-9]+$","",subval)
             if subval.count(".")==2:
                 subval = re.sub(r"\.[0-9]{2}\.?$","",subval)
+
             return subval
 
-
+        #total_df.to_excel("tmp.xlsx", index=False)
 
         total_df["price"] = pd.to_numeric(total_df["price"].fillna('').apply(lambda x: drop_all_odd(x)),errors='coerce')#.fillna('-1')
 
@@ -390,7 +409,7 @@ st.markdown("\n")
 is_disabled = False#not check_if_last_load_was_at_least_x_minutes_ago(minutes=720)
 params = st._get_query_params()
 if "admin" in params.keys():
-    st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help= "Naciśnij aby przeładować dane (powinno zająć do dwóch minut)" )
+    st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help= "Naciśnij aby przeładować dane (powinno zająć do czterech minut)" )
 
 
 st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")

@@ -1248,6 +1248,7 @@ def scrap_astorclassic() -> [dict]:
                     availability_tarnobrzeg,availability_poznan = (
                         [x["id"]=="yes" for x in product.find("span",id=True)])
                 except Exception as e:
+
                     availability_tarnobrzeg=False
                     availability_poznan=False
 
@@ -1255,7 +1256,7 @@ def scrap_astorclassic() -> [dict]:
                 price = price_tag.get_text(strip=True) if price_tag else ""
                 #print(price)
                 #print(price)
-                price = re.sub(r"( |[^0-9]+)zł","",price)
+                price = re.sub(r"( |[^0-9]+)zł","",price).replace("/szt.","")
                 #print(price)
                 link = title_tag['href'] if title_tag and title_tag.has_attr('href') else "No link"
 
@@ -1286,6 +1287,7 @@ def scrap_astorclassic() -> [dict]:
         return products_data
 
     # Run the scraper
+
     return scrape_all_products()
 
 #https://gunsmasters.pl/produkty/amunicja,2,55
@@ -1595,13 +1597,11 @@ def scrap_snajper() -> [dict]:
 
         return products_data
 
-    # Run the scraper
     return scrape_all_products()
 
 def scrap_coltwroclaw() -> [dict]:
     base_url = 'https://coltwroclaw.pl/18-amunicja'
 
-    # Function to get total number of pages
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -1742,6 +1742,61 @@ def scrap_vismag() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+def scrap_bazooka() -> [dict]:
+    base_url = "https://bazooka.waw.pl/amunicja-2"
+
+    def scrape_all_products():
+        products_data = []
+
+
+        response = requests.get(base_url, headers=headers)
+
+        if response.status_code != 200:
+
+            return
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        product_containers = soup.find_all("li",class_="ajax_block_product")
+
+        #h2 rozmiar
+        #UL - oferty
+            #LI - poszczególne produkty
+
+        sizes = soup.find_all("h2")[1:]
+        uls = soup.find_all("ul")
+        for size,ul in zip(sizes,uls):
+            size = size.get_text(strip=True) if "Pozostałe" not in size.get_text(strip=True) else None
+
+            for li in ul.find_all("li"):
+
+                line = li.get_text(strip=True) #strong 0 cena
+                price = re.sub(r"([^0-9,\\.])","",li.find("strong").get_text(strip=True))[:-1]
+                title = line.replace(price,"")
+                if size is None:
+                    title, size = extract_data_from_title(title)
+
+
+
+                products_data.append({
+                    "city": "Pruszków",
+                    'title': title,
+                    'price': price ,
+                    'link': f"https://www.bazooka.sklep.pl/search?q={title.replace(' ','+').replace('\\xa','')}",
+                    'size': size,
+                    'available': True,
+                    'store': 'Bazooka'
+                })
+
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
+
+
+
+
+
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand, #Warszawa
@@ -1753,6 +1808,7 @@ STORES_SCRAPPERS = {
     "Salon broni":scrap_salonbroni, #Warszawa
     "Best gun":scrap_bestgun, #Ciechanów
     "Mex armory": scrap_mex_armory, #Warszawa
+    "Bazooka" : scrap_bazooka,
     "Gun eagle rusznikarnia": scrap_gun_eagle_rusznikarnia, #Ostrołęka
     "Top shot": scrap_top_shot, #Łódź
     "Kwatermistrz":scrap_kwatermistrz, #Łódź
@@ -1765,9 +1821,8 @@ STORES_SCRAPPERS = {
     "Atena Gun":scrap_atenagun, #Kraków
     "Snajper":scrap_snajper, #Kraków
     "Vismag":scrap_vismag #Lublin
+
 }
-
-
 
 
 
