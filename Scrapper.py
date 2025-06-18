@@ -1793,9 +1793,6 @@ def scrap_bazooka() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
-
-
-
 def scrap_cyngiel() -> [dict]:
     base_url = 'https://cyngiel.com.pl/sklep-z-bronia/amunicja-do-broni-palnej/?products-per-page=all'
 
@@ -1854,6 +1851,84 @@ def scrap_cyngiel() -> [dict]:
     # Run the scraper
     return scrape_all_products()
 
+def scrap_emilitaria() -> [dict]:
+    base_url = 'https://e-militaria.pl/amunicja-946'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        try:
+            return max([int(x.get_text(strip=True)) for x in soup.find("nav",class_="pagination").find_all("li") if x.get_text(strip=True).isdigit()])
+        except:
+            return 1
+
+
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+        pages = get_total_pages()
+        for page in range(pages):
+
+            if page != 0:
+                url = f'{base_url}?page={page+1}'
+            else:
+                url = base_url
+
+            # print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('div',class_="product-description")
+
+            for product in product_containers:
+
+                title = product.find("div",class_="col")
+                price = product.find("span",class_="product-price").get_text(strip=True)
+                title = title.find("h4").get_text(strip=True)
+
+
+
+                #print([x.get_text(strip=True) for x in prices_tag])
+                try:
+                    availibility =product.find("li",class_="out_of_stock").get_text(strip=True) is not None
+                except:
+                    availibility = True
+
+                #availability = product.find("form", class_="availability-notifier")
+                #title = title_tag.get_text(strip=True) if title_tag else "No title"
+
+                #availibility = "zł" in price
+
+                price = price.replace("Cena:","").replace("zł","").replace("\xa0","")
+
+                link = product.find("a")['href']
+
+                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Mirków",
+                    'title': title,
+                    'price': price ,
+                    'link': link,
+                    'size': size,
+                    'available': availibility,
+                    'store': 'E-militaria'
+                })
+
+        return products_data
+
+    return scrape_all_products()
+
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand, #Warszawa
@@ -1878,5 +1953,7 @@ STORES_SCRAPPERS = {
     "Atena Gun":scrap_atenagun, #Kraków
     "Snajper":scrap_snajper, #Kraków
     "Vismag":scrap_vismag, #Lublin
-    "Cyngiel":scrap_cyngiel() #Warszawa/Siedlce/Kobyłka
+    "Cyngiel":scrap_cyngiel, #Warszawa/Siedlce/Kobyłka,
+    "E-militaria":scrap_emilitaria, #Mirków
 }
+
