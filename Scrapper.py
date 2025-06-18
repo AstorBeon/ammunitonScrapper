@@ -1796,6 +1796,63 @@ def scrap_bazooka() -> [dict]:
 
 
 
+def scrap_cyngiel() -> [dict]:
+    base_url = 'https://cyngiel.com.pl/sklep-z-bronia/amunicja-do-broni-palnej/?products-per-page=all'
+
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+
+
+        response = requests.get(base_url, headers=headers)
+
+        if response.status_code != 200:
+            print("Failed to pull for cyngiel")
+            return
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        product_containers = soup.find_all('div',class_="product-inner")
+
+        for product in product_containers:
+
+            title_tag = product.find('h2')
+            link = title_tag.find('a')['href']
+            try:
+                price = product.find('bdi').get_text(strip=True)
+            except:
+                price=''
+
+            availibility = product.find("div",class_="outofstock-badge") is None
+
+
+
+            title = title_tag.get_text(strip=True) if title_tag else "No title"
+
+            price = re.sub(r"[^0-9,\.]","",price)
+
+            title, size = extract_data_from_title(title)
+            template = {
+                "city": "Warszawa",
+                'title': title,
+                'price': price ,
+                'link': link,
+                'size': size,
+                'available': availibility,
+                'store': 'Cyngiel'
+            }
+
+            products_data.append(template)
+            template_siedlce = template.copy()
+            template_siedlce["city"]="Siedlce"
+            products_data.append(template_siedlce)
+
+
+
+        return products_data
+
+    # Run the scraper
+    return scrape_all_products()
 
 
 STORES_SCRAPPERS = {
@@ -1820,9 +1877,6 @@ STORES_SCRAPPERS = {
     "Knieja":scrap_knieja, #Kraków,
     "Atena Gun":scrap_atenagun, #Kraków
     "Snajper":scrap_snajper, #Kraków
-    "Vismag":scrap_vismag #Lublin
-
+    "Vismag":scrap_vismag, #Lublin
+    "Cyngiel":scrap_cyngiel() #Warszawa/Siedlce/Kobyłka
 }
-
-
-
