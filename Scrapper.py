@@ -1929,6 +1929,82 @@ def scrap_emilitaria() -> [dict]:
 
     return scrape_all_products()
 
+def scrap_edex() -> [dict]:
+    base_url = 'https://edexbron.pl/kategoria/amunicja-1'
+
+    # Function to get total number of pages
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        try:
+            return int(soup.find("div",class_="pagination__page-selector").find("span",class_="pagination__page-selector-text").get_text(strip=True).split(" ")[1])
+
+        except:
+            return 1
+
+
+
+    # Function to scrape product data
+    def scrape_all_products():
+        products_data = []
+
+        for page in range(get_total_pages()):
+
+            url = f'{base_url}/{page}'
+            # print(f'\nScraping page {page}: {url}')
+            response = requests.get(url, headers=headers)
+            page+=1
+            if response.status_code != 200:
+
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('div', class_="product-tile__header")
+
+            for product in product_containers:
+
+                title_tag = product.find('product-link')
+                try:
+                    price = product.find('div', class_='product-tile__content').get_text(strip=True)
+
+                except:
+                    price=''
+
+                #print([x.get_text(strip=True) for x in prices_tag])
+                try:
+                    availibility = product.find("span",class_="product-tile__availability").get_text(strip=True)
+                    availibility = False
+                except:
+                    availibility = True
+                #availability = product.find("form", class_="availability-notifier")
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+
+                #availibility = "zł" in price
+
+                price = price.replace("Cena:","").replace("zł","").replace("\xa0zł","")
+
+                link = product.find("a")['href']
+
+                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "city": "Jasło",
+                    'title': title,
+                    'price': price ,
+                    'link': link,
+                    'size': size,
+                    'available': availibility,
+                    'store': 'Edex'
+                })
+
+        return products_data
+
+    return scrape_all_products()
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand, #Warszawa
@@ -1957,3 +2033,5 @@ STORES_SCRAPPERS = {
     "E-militaria":scrap_emilitaria, #Mirków
 }
 
+for c in scrap_edex():
+    print(c)
