@@ -1964,6 +1964,74 @@ def scrap_edex() -> [dict]:
 
     return scrape_all_products()
 
+def scrap_goldguns() -> [dict]:
+    base_url = 'https://goldguns.pl/pl/c/AMUNICJA/288'
+
+
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        try:
+            return max([int(x.get_text(strip=True)) for x in soup.find("ul",class_="paginator").find_all("li") if x.get_text(strip=True).isdigit()])
+
+        except:
+            return 1
+
+
+
+
+    def scrape_all_products():
+        products_data = []
+
+        for page in range(get_total_pages()):
+
+            url = f'{base_url}/{page}'
+            response = requests.get(url, headers=headers)
+            page+=1
+            if response.status_code != 200:
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('div',class_="modProdBoxContainer")
+            for product in product_containers:
+
+                title_tag = product.find('span',class_="productname")
+                try:
+                    price = product.find('div', class_='price').get_text(strip=True)
+
+                except:
+                    price=''
+
+                availibility =  product.find("button",class_="availability-notifier-btn") is None
+
+
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+
+
+                price = re.search(r"\d+,\d+",price).group(0)
+                link = f"{base_url}{product.find('a')['href']}"
+                title, size = extract_data_from_title(title)
+
+                products_data.append({
+                    "city": "Poznań",
+                    'title': title,
+                    'price': price ,
+                    'link': link,
+                    'size': size,
+                    'available': availibility,
+                    'store': 'GoldGuns'
+                })
+
+        return products_data
+
+    return scrape_all_products()
+
+
 STORES_SCRAPPERS = {
     "Garand":scrap_garand, #Warszawa
     "Top gun":scrap_top_gun, #Warszawa
@@ -1989,5 +2057,8 @@ STORES_SCRAPPERS = {
     "Vismag":scrap_vismag, #Lublin
     "Cyngiel":scrap_cyngiel, #Warszawa/Siedlce/Kobyłka,
     "E-militaria":scrap_emilitaria, #Mirków
-    "Edex":scrap_edex #Jasło
+    "Edex":scrap_edex, #Jasło
+    "GoldGuns":scrap_goldguns
 }
+
+
