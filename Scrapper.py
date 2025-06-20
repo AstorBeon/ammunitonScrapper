@@ -1964,23 +1964,23 @@ def scrap_edex() -> [dict]:
                 break
 
             soup = BeautifulSoup(response.text, 'html.parser')
-            product_containers = soup.find_all('div', class_="product-tile__header")
+            product_containers = soup.find_all('product-tile')
 
             for product in product_containers:
 
-                title_tag = product.find('product-link')
+                title_tag = product.find('h3')
                 try:
-                    price = product.find('div', class_='product-tile__content').get_text(strip=True)
+                    price = product.find('div', class_='product-tile__price').get_text(strip=True)
 
                 except:
                     price=''
 
                 #print([x.get_text(strip=True) for x in prices_tag])
                 try:
-                    availibility = product.find("span",class_="product-tile__availability").get_text(strip=True)
-                    availibility = False
+                    availibility = "Brak" in product.find("strong",class_="product-tile__availability-value").get_text(strip=True)
                 except:
-                    availibility = True
+                    #On error - it's a ad on the side of the page
+                    continue
                 #availability = product.find("form", class_="availability-notifier")
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
 
@@ -1988,7 +1988,7 @@ def scrap_edex() -> [dict]:
 
                 price = price.replace("Cena:","").replace("zł","").replace("\xa0zł","")
 
-                link = product.find("a")['href']
+                link = f"{base_url}{product.find('a')['href']}"
 
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
@@ -2032,6 +2032,3 @@ STORES_SCRAPPERS = {
     "Cyngiel":scrap_cyngiel, #Warszawa/Siedlce/Kobyłka,
     "E-militaria":scrap_emilitaria, #Mirków
 }
-
-for c in scrap_edex():
-    print(c)
