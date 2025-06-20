@@ -2031,4 +2031,5 @@ STORES_SCRAPPERS = {
     "Vismag":scrap_vismag, #Lublin
     "Cyngiel":scrap_cyngiel, #Warszawa/Siedlce/Kobyłka,
     "E-militaria":scrap_emilitaria, #Mirków
+    "EDEX":scrap_edex #Jasło
 }
