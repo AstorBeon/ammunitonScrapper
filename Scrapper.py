@@ -107,7 +107,7 @@ def scrap_top_gun() -> [dict]:
 
         for page in range(1, total_pages + 1):
             url = f'{base_url}?p={page}#/cena-0-7'
-            ##print(f'\nScraping page {page}: {url}')
+            #
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -139,7 +139,7 @@ def scrap_top_gun() -> [dict]:
 
         return products_data
     return scrape_all_products()
-    # Run the scraper
+    
 
 def scrap_strefa_celu() -> [dict]:
 
@@ -151,7 +151,7 @@ def scrap_strefa_celu() -> [dict]:
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
     }
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -167,15 +167,15 @@ def scrap_strefa_celu() -> [dict]:
         page_numbers = [int(link.get_text()) for link in page_links if link.get_text().isdigit()]
         return max(page_numbers) if page_numbers else 1
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        #print(f"Total pages found: {total_pages}")
+        
         
         for page in range(1, total_pages + 1):
             url = f'{base_url}?p={page}'
-            #print(f'\nScraping page {page}: {url}')
+            
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -209,7 +209,7 @@ def scrap_strefa_celu() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     product_list = scrape_all_products()
     return product_list
 
@@ -222,7 +222,7 @@ def scrap_garand() -> [dict]:
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
     }
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -238,15 +238,15 @@ def scrap_garand() -> [dict]:
         page_numbers = [int(link.get_text()) for link in page_links if link.get_text().isdigit()]
         return max(page_numbers) if page_numbers else 1
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        #print(f"Total pages found: {total_pages}")
+        
 
         for page in range(1, total_pages + 1):
             url = f'{base_url}/{page}?p={page}'
-            #print(f'\nScraping page {page}: {url}')
+            
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -284,7 +284,7 @@ def scrap_garand() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     product_list = scrape_all_products()
     return product_list
 
@@ -297,7 +297,7 @@ def scrap_jmbron() -> [dict]:
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
     }
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -313,18 +313,17 @@ def scrap_jmbron() -> [dict]:
         page_numbers = [int(link.get_text()) for link in page_links if link.get_text().isdigit()]
         return max(page_numbers) if page_numbers else 1
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        #print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             if page == 1:
                 url = base_url
             else:
                 url = f'{base_url}page/{page}/'
-            #print(f'\nScraping page {page}: {url}')
+            
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -363,7 +362,7 @@ def scrap_jmbron() -> [dict]:
 def scrap_magazynuzbrojenia() -> [dict]:
     base_url = 'https://sklep.magazynuzbrojenia.pl/pl/c/Amunicja/1'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers,verify=False)
         if response.status_code != 200:
@@ -379,18 +378,17 @@ def scrap_magazynuzbrojenia() -> [dict]:
         page_numbers = [int(link.get_text()) for link in page_links if link.get_text().isdigit()]
         return max(page_numbers) if page_numbers else 1
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        #print(f"Total pages found: {total_pages}")
-
+        
         for page in range(1, total_pages + 1):
             if page == 1:
                 url = base_url
             else:
                 url = f'https://sklep.magazynuzbrojenia.pl/pl/c/Amunicja/{page}'
-            #print(f'\nScraping page {page}: {url}')
+            
             response = requests.get(url, headers=headers,verify=False)
 
             if response.status_code != 200:
@@ -405,10 +403,8 @@ def scrap_magazynuzbrojenia() -> [dict]:
                 price_tag = product.find('div', class_='price')
                 link = f"https://sklep.magazynuzbrojenia.pl/{title_tag['href']}"
                 availability_tag = product.find('p', class_='avail')
-                #todo pin
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
                 price = price_tag.get_text(strip=True) if price_tag else "No price"
-                #link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
                 availability = "brak towaru" not in availability_tag.get_text(strip=True)\
                     if availability_tag else "Availability unknown"
                 title,size = extract_data_from_title(title)
@@ -429,7 +425,7 @@ def scrap_magazynuzbrojenia() -> [dict]:
 def scrap_kaliber() -> [dict]:
     base_url = 'https://kaliber.pl/184-amunicja'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -443,23 +439,20 @@ def scrap_kaliber() -> [dict]:
         if not pagination:
             return 1
 
-        #print([link.get_text().replace("\n","") for link in pagination ])
         page_numbers = [int(link.get_text().replace("\n",""))
                         for link in pagination if link.get_text().replace("\n","").isdigit()]
         return max(page_numbers) if page_numbers else 1
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-
 
         for page in range(1, total_pages + 1):
             if page == 1:
                 url = base_url
             else:
                 url = f'https://kaliber.pl/184-amunicja#/page-{page}'
-            #print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -493,7 +486,7 @@ def scrap_kaliber() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_salonbroni() -> [dict]:
@@ -506,24 +499,18 @@ def scrap_salonbroni() -> [dict]:
     pages = max([int(x.get_text()) for x in pages.find_all("li") if x.get_text().isdigit()])
 
 
-    # Function to scrape product data
+
     def scrape_products(page=1):
         products_data = []
-        #todo update
         url = f'https://www.salonbroni.pl/amunicja/{page}'
-        #print(f'\nScraping page {page}: {url}')
         response = requests.get(url, headers=headers, verify=False)
-
         soup = BeautifulSoup(response.text, 'html.parser')
-
-        # Adjust the selectors based on the actual HTML structure
         product_containers = soup.find_all('div', class_='product_view-extended')
 
         for product in product_containers:
             title_tag = product.find('a', class_='prodname')
             price_tag = product.find('div', class_='price')
             availability = not product.find("button",class_="availability-notifier-btn")
-
             title = title_tag.get_text(strip=True) if title_tag else "No title"
             price = price_tag.get_text(strip=True) if price_tag else "No price"
             link = urljoin(base_url, title_tag['href']) if title_tag and title_tag.has_attr('href') else "No link"
@@ -546,13 +533,12 @@ def scrap_salonbroni() -> [dict]:
 
     for i in range(1, pages+1):
         products.extend(scrape_products(i))
-    # Run the scraper
+    
     return products
 
 def scrap_bestgun() -> [dict]:
     base_url = 'https://www.bestgun.pl/amunicja-c-260.html'
 
-    # Function to get total number of pages
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -566,11 +552,8 @@ def scrap_bestgun() -> [dict]:
             print(e)
             return 1
 
-        # print([link.get_text().replace("\n","") for link in pagination ])
-
         return pagination
 
-    # Function to scrape product data
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
@@ -602,7 +585,6 @@ def scrap_bestgun() -> [dict]:
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
                 price = price_tag.get_text(strip=True) if price_tag else ""
                 link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
-                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
                     "city": "Ciechanów",
@@ -615,14 +597,11 @@ def scrap_bestgun() -> [dict]:
                 })
 
         return products_data
-
-    # Run the scraper
     return scrape_all_products()
 
 def scrap_mex_armory() -> [dict]:
     base_url = 'https://mexarmory.pl/product-category/amunicja'
 
-    # Function to get total number of pages
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -635,22 +614,18 @@ def scrap_mex_armory() -> [dict]:
         except Exception as e:
             print(e)
             return 1
-
-        # print([link.get_text().replace("\n","") for link in pagination ])
-
+        
         return pagination
 
-    # Function to scrape product data
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
 
         for page in range(1, total_pages + 1):
-            if page == 1:
+            if page == 1:   
                 url = base_url
             else:
                 url = f'{base_url}/page/{page}'
-            # print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -661,20 +636,13 @@ def scrap_mex_armory() -> [dict]:
             product_containers = soup.find('div', class_='shop-container').find_all("div",class_="product-small")
 
             for product in product_containers:
-                #content = product.find("div",class_="ProdCena")
-
                 title_tag = product.find('div', class_="title-wrapper")
                 price_tag = product.find('div', class_='price-wrapper')
-
                 link_tag = product.find('a')
-
                 availability = False if product.find("div",class_="out-of-stock-label") else True
-
-
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
                 price = price_tag.get_text(strip=True) if price_tag else ""
                 link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
-                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
                     "city": "Warszawa",
@@ -688,13 +656,12 @@ def scrap_mex_armory() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+
     return scrape_all_products()
 
 def scrap_gun_eagle_rusznikarnia() -> [dict]:
     base_url = 'https://www.gun-eagle.pl/amunicja-c-7.html'
 
-    # Function to get total number of pages
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -712,7 +679,7 @@ def scrap_gun_eagle_rusznikarnia() -> [dict]:
 
         return pagination
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
@@ -760,13 +727,13 @@ def scrap_gun_eagle_rusznikarnia() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_top_shot() -> [dict]:
     base_url = 'https://sklep.top-shot.pl/138-amunicja'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -789,7 +756,7 @@ def scrap_top_shot() -> [dict]:
 
         return pagination
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
@@ -834,13 +801,13 @@ def scrap_top_shot() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_kwatermistrz() -> [dict]:
     base_url = 'https://www.kwatermistrz.com.pl/amunicja'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -861,7 +828,7 @@ def scrap_kwatermistrz() -> [dict]:
 
         return pagination
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
@@ -909,13 +876,13 @@ def scrap_kwatermistrz() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_c4guns() -> [dict]:
     base_url = 'https://c4guns.sklep.pl/16-amunicja'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -940,7 +907,7 @@ def scrap_c4guns() -> [dict]:
 
         return pagination
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
@@ -989,13 +956,13 @@ def scrap_c4guns() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_puchacz() -> [dict]:
     base_url = 'https://www.puchacz.net/amunicja-c-6.html?'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -1020,7 +987,7 @@ def scrap_puchacz() -> [dict]:
 
         return pagination
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
@@ -1073,13 +1040,13 @@ def scrap_puchacz() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_rparms() -> [dict]:
     base_url = 'https://rparms.pl/4-amunicja'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -1106,7 +1073,7 @@ def scrap_rparms() -> [dict]:
 
         return math.ceil(pagination/50)
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
@@ -1179,13 +1146,13 @@ def scrap_rparms() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_astorclassic() -> [dict]:
     base_url = 'https://astroclassic.pl/kat/amunicja/'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -1215,11 +1182,11 @@ def scrap_astorclassic() -> [dict]:
 
         return pagination
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        #print(f"Total pages found: {total_pages}")
+        
 
         for page in range(1, total_pages + 1):
             if page == 1:
@@ -1286,7 +1253,7 @@ def scrap_astorclassic() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
 
     return scrape_all_products()
 
@@ -1294,7 +1261,7 @@ def scrap_astorclassic() -> [dict]:
 def scrap_gunsmasters() -> [dict]:
     base_url = 'https://gunsmasters.pl/produkty/dostępność=dostępny-/amunicja,2,55'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -1315,7 +1282,7 @@ def scrap_gunsmasters() -> [dict]:
 
         return pagination
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
@@ -1368,13 +1335,13 @@ def scrap_gunsmasters() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_knieja() -> [dict]:
     base_url = 'https://www.knieja.com.pl/30-amunicja-i-elaboracja'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -1395,7 +1362,7 @@ def scrap_knieja() -> [dict]:
 
         return pagination
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
@@ -1449,13 +1416,13 @@ def scrap_knieja() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_atenagun() -> [dict]:
     base_url = 'https://www.atenagun.pl/kategoria/amunicja'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -1469,7 +1436,7 @@ def scrap_atenagun() -> [dict]:
 
 
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         page=1
@@ -1520,13 +1487,13 @@ def scrap_atenagun() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_snajper() -> [dict]:
     base_url = 'https://sklepsnajper.pl/kategoria/amunicja/'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -1542,7 +1509,7 @@ def scrap_snajper() -> [dict]:
 
 
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         page=1
@@ -1617,7 +1584,7 @@ def scrap_coltwroclaw() -> [dict]:
 
 
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         pages = get_total_pages()
@@ -1665,13 +1632,13 @@ def scrap_coltwroclaw() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_vismag() -> [dict]:
     base_url = 'https://bron-sklep.pl/11-amunicja'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -1687,7 +1654,7 @@ def scrap_vismag() -> [dict]:
 
 
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
 
@@ -1739,7 +1706,7 @@ def scrap_vismag() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_bazooka() -> [dict]:
@@ -1790,14 +1757,14 @@ def scrap_bazooka() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_cyngiel() -> [dict]:
     base_url = 'https://cyngiel.com.pl/sklep-z-bronia/amunicja-do-broni-palnej/?products-per-page=all'
 
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
 
@@ -1848,13 +1815,13 @@ def scrap_cyngiel() -> [dict]:
 
         return products_data
 
-    # Run the scraper
+    
     return scrape_all_products()
 
 def scrap_emilitaria() -> [dict]:
     base_url = 'https://e-militaria.pl/amunicja-946'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -1870,7 +1837,7 @@ def scrap_emilitaria() -> [dict]:
 
 
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
         pages = get_total_pages()
@@ -1932,7 +1899,7 @@ def scrap_emilitaria() -> [dict]:
 def scrap_edex() -> [dict]:
     base_url = 'https://edexbron.pl/kategoria/amunicja-1'
 
-    # Function to get total number of pages
+
     def get_total_pages():
         response = requests.get(base_url, headers=headers)
         if response.status_code != 200:
@@ -1949,23 +1916,20 @@ def scrap_edex() -> [dict]:
 
 
 
-    # Function to scrape product data
+
     def scrape_all_products():
         products_data = []
 
         for page in range(get_total_pages()):
 
             url = f'{base_url}/{page}'
-            # print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
             page+=1
             if response.status_code != 200:
-
                 break
 
             soup = BeautifulSoup(response.text, 'html.parser')
             product_containers = soup.find_all('product-tile')
-
             for product in product_containers:
 
                 title_tag = product.find('h3')
@@ -1974,23 +1938,17 @@ def scrap_edex() -> [dict]:
 
                 except:
                     price=''
-
-                #print([x.get_text(strip=True) for x in prices_tag])
                 try:
                     availibility = "Brak" in product.find("strong",class_="product-tile__availability-value").get_text(strip=True)
                 except:
                     #On error - it's a ad on the side of the page
                     continue
-                #availability = product.find("form", class_="availability-notifier")
+
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
 
-                #availibility = "zł" in price
 
                 price = price.replace("Cena:","").replace("zł","").replace("\xa0zł","")
-
                 link = f"{base_url}{product.find('a')['href']}"
-
-                # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
                     "city": "Jasło",
