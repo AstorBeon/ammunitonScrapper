@@ -68,18 +68,20 @@ def clean_other_than_nums(text):
 def get_all_existing_sizes(df:DataFrame)->[str]:
     if df.empty:
         return []
-    options = list(set(df["size"].to_list()))
+
+
+    options = list(set(df["Kaliber"].to_list()))
 
     return options
 
 def map_sizes(data:pd.DataFrame) -> pd.DataFrame:
-
-    data['size'] = data["size"].apply(lambda x:map_single_size(str(x)) )
+    print(data.columns)
+    data['Kaliber'] = data["Kaliber"].apply(lambda x:map_single_size(str(x)) )
 
     return data
 
 def map_prices(data:pd.DataFrame) -> pd.DataFrame:
-    data["price"] = data["price"].apply(trim_price)
+    data["Cena"] = data["Cena"].apply(trim_price)
     return data
 
 def scrap_top_gun() -> [dict]:
@@ -128,13 +130,13 @@ def scrap_top_gun() -> [dict]:
                 title,size = extract_data_from_title(title)
 
                 products_data.append({
-                    "city":"Warszawa",
-                    'store':"Top gun",
-                    'title': title,
+                    "Miasto":"Warszawa",
+                    "Sklep":"Top gun",
+                    "Tytuł": title,
                     'link': link,
-                    'size': size,
-                    'price': price,
-                    "available":available
+                    "Kaliber": size,
+                    "Cena": price,
+                    "Dostępny":available
                 })
 
         return products_data
@@ -198,12 +200,12 @@ def scrap_strefa_celu() -> [dict]:
                 title,size = extract_data_from_title(title)
 
                 products_data.append({
-                    "city": "Warszawa",
-                    'title': title,
-                    "size":size,
-                    'store':"Strefa Celu",
-                    'price': price,
-                    'available':available.get_text(strip=True)=="Dostępny" if available else False,
+                    "Miasto": "Warszawa",
+                    "Tytuł": title,
+                    "Kaliber":size,
+                    "Sklep":"Strefa Celu",
+                    "Cena": price,
+                    "Dostępny":available.get_text(strip=True)=="Dostępny" if available else False,
                     'link': link
                 })
 
@@ -272,12 +274,12 @@ def scrap_garand() -> [dict]:
                 title,size = extract_data_from_title(title)
 
                 products_data.append({
-                    "city": "Warszawa",
-                    'title': title,
-                    'size':size,
-                    'store':"Garand",
-                    'price': price,
-                    "available": available,
+                    "Miasto": "Warszawa",
+                    "Tytuł": title,
+                    "Kaliber":size,
+                    "Sklep":"Garand",
+                    "Cena": price,
+                    "Dostępny": available,
                     'link': link
                 })
                 #print(products_data[-1])
@@ -345,13 +347,13 @@ def scrap_jmbron() -> [dict]:
                 availability = availability_tag.get_text(strip=True)=="Na stanie" if availability_tag else False
                 title,size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Warszawa",
-                    'title': title,
-                    'price': price,
+                    "Miasto": "Warszawa",
+                    "Tytuł": title,
+                    "Cena": price,
                     'link': link,
-                    'size':size,
-                    'available': availability,
-                    'store': "JM Bron"
+                    "Kaliber":size,
+                    "Dostępny": availability,
+                    "Sklep": "JM Bron"
                 })
 
         return products_data
@@ -409,13 +411,13 @@ def scrap_magazynuzbrojenia() -> [dict]:
                     if availability_tag else "Availability unknown"
                 title,size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Warszawa",
-                    'title': title,
-                    'price': price,
-                    'size':size,
+                    "Miasto": "Warszawa",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Kaliber":size,
                     'link': link,
-                    'available': availability,
-                    'store':"Magazyn uzbrojenia"
+                    "Dostępny": availability,
+                    "Sklep":"Magazyn uzbrojenia"
                 })
 
         return products_data
@@ -475,13 +477,13 @@ def scrap_kaliber() -> [dict]:
                 #availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title,size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Warszawa",
-                    'title': title,
-                    'price': "",
+                    "Miasto": "Warszawa",
+                    "Tytuł": title,
+                    "Cena": "",
                     'link': link,
-                    'size':size,
-                    'available': availability,
-                    'store':'Kaliber'
+                    "Kaliber":size,
+                    "Dostępny": availability,
+                    "Sklep":'Kaliber'
                 })
 
         return products_data
@@ -517,13 +519,13 @@ def scrap_salonbroni() -> [dict]:
             #availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
             title,size = extract_data_from_title(title)
             products_data.append({
-                "city": "Warszawa",
-                'title': title,
-                'price': price,
-                'size':size,
+                "Miasto": "Warszawa",
+                "Tytuł": title,
+                "Cena": price,
+                "Kaliber":size,
                 'link': link,
-                'available': availability,
-                'store':"Salon broni"
+                "Dostępny": availability,
+                "Sklep":"Salon broni"
             })
 
 
@@ -587,13 +589,13 @@ def scrap_bestgun() -> [dict]:
                 link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Ciechanów",
-                    'title': title,
-                    'price': price,
-                    'link': link,
-                    'size': size,
-                    'available': availability,
-                    'store': 'Best gun'
+                    "Miasto": "Ciechanów",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availability,
+                    "Sklep": 'Best gun'
                 })
 
         return products_data
@@ -645,13 +647,13 @@ def scrap_mex_armory() -> [dict]:
                 link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Warszawa",
-                    'title': title,
-                    'price': price,
-                    'link': link,
-                    'size': size,
-                    'available': availability,
-                    'store': 'Mex armory'
+                    "Miasto": "Warszawa",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availability,
+                    "Sklep": 'Mex armory'
                 })
 
         return products_data
@@ -716,13 +718,13 @@ def scrap_gun_eagle_rusznikarnia() -> [dict]:
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Ostrołęka",
-                    'title': title,
-                    'price': price,
-                    'link': link,
-                    'size': size,
-                    'available': availability,
-                    'store': 'Gun eagle rusznikarnia'
+                    "Miasto": "Ostrołęka",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availability,
+                    "Sklep": 'Gun eagle rusznikarnia'
                 })
 
         return products_data
@@ -790,13 +792,13 @@ def scrap_top_shot() -> [dict]:
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Łódź",
-                    'title': title,
-                    'price': price,
-                    'link': link,
-                    'size': size,
-                    'available': availability is None,
-                    'store': 'Top shot'
+                    "Miasto": "Łódź",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availability is None,
+                    "Sklep": 'Top shot'
                 })
 
         return products_data
@@ -865,13 +867,13 @@ def scrap_kwatermistrz() -> [dict]:
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Łódź",
-                    'title': title,
-                    'price': price,
-                    'link': link,
-                    'size': size,
-                    'available': availability is None,
-                    'store': 'Kwatermistrz'
+                    "Miasto": "Łódź",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availability is None,
+                    "Sklep": 'Kwatermistrz'
                 })
 
         return products_data
@@ -945,13 +947,13 @@ def scrap_c4guns() -> [dict]:
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Łódź",
-                    'title': title,
-                    'price': price,
-                    'link': link,
-                    'size': size,
-                    'available': "?",
-                    'store': 'C4guns'
+                    "Miasto": "Łódź",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": "?",
+                    "Sklep": 'C4guns'
                 })
 
         return products_data
@@ -1029,13 +1031,13 @@ def scrap_puchacz() -> [dict]:
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Piotrków Trybunalski",
-                    'title': title,
-                    'price': price,
-                    'link': link,
-                    'size': size,
-                    'available': availability,
-                    'store': 'Puchacz'
+                    "Miasto": "Piotrków Trybunalski",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availability,
+                    "Sklep": 'Puchacz'
                 })
 
         return products_data
@@ -1124,23 +1126,23 @@ def scrap_rparms() -> [dict]:
                 title, size = extract_data_from_title(title)
 
                 products_data.append({
-                    "city": "Poznań",
-                    'title': title,
-                    'price': price,
-                    'link': link,
-                    'size': size,
-                    'available': availability_poznan=="Dostępny",
-                    'store': 'RParms'
+                    "Miasto": "Poznań",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availability_poznan=="Dostępny",
+                    "Sklep": 'RParms'
                 })
 
                 products_data.append({
-                    "city": "Aleksandrów Łódzki",
-                    'title': title,
-                    'price': price,
-                    'link': link,
-                    'size': size,
-                    'available': availability_aleks=="Dostępny",
-                    'store': 'RParms'
+                    "Miasto": "Aleksandrów Łódzki",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availability_aleks=="Dostępny",
+                    "Sklep": 'RParms'
                 })
 
 
@@ -1231,23 +1233,23 @@ def scrap_astorclassic() -> [dict]:
                 title, size = extract_data_from_title(title)
 
                 products_data.append({
-                    "city": "Tarnobrzeg",
-                    'title': title,
-                    'price': price,
-                    'link': link,
-                    'size': size,
-                    'available': availability_tarnobrzeg,
-                    'store': 'Astroclassic'
+                    "Miasto": "Tarnobrzeg",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availability_tarnobrzeg,
+                    "Sklep": 'Astroclassic'
                 })
 
                 products_data.append({
-                    "city": "Poznań",
-                    'title': title,
-                    'price': price,
-                    'link': link,
-                    'size': size,
-                    'available': availability_poznan,
-                    'store': 'Astroclassic'
+                    "Miasto": "Poznań",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availability_poznan,
+                    "Sklep": 'Astroclassic'
                 })
 
 
@@ -1324,13 +1326,13 @@ def scrap_gunsmasters() -> [dict]:
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Wrocław",
-                    'title': title,
-                    'price': price ,
-                    'link': link,
-                    'size': size,
-                    'available': availibility != "Powiadom o dostępności",
-                    'store': 'Gunmasters'
+                    "Miasto": "Wrocław",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility != "Powiadom o dostępności",
+                    "Sklep": 'Gunmasters'
                 })
 
         return products_data
@@ -1405,13 +1407,13 @@ def scrap_knieja() -> [dict]:
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Kraków",
-                    'title': title,
-                    'price': price ,
-                    'link': link,
-                    'size': size,
-                    'available': availibility,
-                    'store': 'Knieja'
+                    "Miasto": "Kraków",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Knieja'
                 })
 
         return products_data
@@ -1476,13 +1478,13 @@ def scrap_atenagun() -> [dict]:
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Kraków",
-                    'title': title,
-                    'price': price ,
-                    'link': link,
-                    'size': size,
-                    'available': availibility,
-                    'store': 'Atena Gun'
+                    "Miasto": "Kraków",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Atena Gun'
                 })
 
         return products_data
@@ -1553,13 +1555,13 @@ def scrap_snajper() -> [dict]:
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Kraków",
-                    'title': title,
-                    'price': price ,
-                    'link': link,
-                    'size': size,
-                    'available': availibility,
-                    'store': 'Snajper'
+                    "Miasto": "Kraków",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Snajper'
                 })
 
         return products_data
@@ -1621,13 +1623,13 @@ def scrap_coltwroclaw() -> [dict]:
                 link = product.find("a")['href']
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Kraków",
-                    'title': title,
-                    'price': price ,
-                    'link': link,
-                    'size': size,
-                    'available': availibility,
-                    'store': 'Colt Wroclaw'
+                    "Miasto": "Kraków",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Colt Wroclaw'
                 })
 
         return products_data
@@ -1694,13 +1696,13 @@ def scrap_vismag() -> [dict]:
 
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Lublin",
-                    'title': title,
-                    'price': price ,
-                    'link': link,
-                    'size': size,
-                    'available': availibility,
-                    'store': 'Vismag'
+                    "Miasto": "Lublin",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Vismag'
                 })
 
 
@@ -1745,13 +1747,13 @@ def scrap_bazooka() -> [dict]:
 
 
                 products_data.append({
-                    "city": "Pruszków",
-                    'title': title,
-                    'price': price ,
-                    'link': f"https://www.bazooka.sklep.pl/search?q={title.replace(' ','+').replace('\\xa','')}",
-                    'size': size,
-                    'available': True,
-                    'store': 'Bazooka'
+                    "Miasto": "Pruszków",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": f"https://www.bazooka.sklep.pl/search?q={title.replace(' ','+').replace('\\xa','')}",
+                    "Kaliber": size,
+                    "Dostępny": True,
+                    "Sklep": 'Bazooka'
                 })
 
 
@@ -1797,18 +1799,18 @@ def scrap_cyngiel() -> [dict]:
 
             title, size = extract_data_from_title(title)
             template = {
-                "city": "Warszawa",
-                'title': title,
-                'price': price ,
-                'link': link,
-                'size': size,
-                'available': availibility,
-                'store': 'Cyngiel'
+                "Miasto": "Warszawa",
+                "Tytuł": title,
+                "Cena": price ,
+                "Link": link,
+                "Kaliber": size,
+                "Dostępny": availibility,
+                "Sklep": 'Cyngiel'
             }
 
             products_data.append(template)
             template_siedlce = template.copy()
-            template_siedlce["city"]="Siedlce"
+            template_siedlce["Miasto"]="Siedlce"
             products_data.append(template_siedlce)
 
 
@@ -1883,13 +1885,13 @@ def scrap_emilitaria() -> [dict]:
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Mirków",
-                    'title': title,
-                    'price': price ,
-                    'link': link,
-                    'size': size,
-                    'available': availibility,
-                    'store': 'E-militaria'
+                    "Miasto": "Mirków",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'E-militaria'
                 })
 
         return products_data
@@ -1951,13 +1953,13 @@ def scrap_edex() -> [dict]:
                 link = f"{base_url}{product.find('a')['href']}"
                 title, size = extract_data_from_title(title)
                 products_data.append({
-                    "city": "Jasło",
-                    'title': title,
-                    'price': price ,
-                    'link': link,
-                    'size': size,
-                    'available': availibility,
-                    'store': 'Edex'
+                    "Miasto": "Jasło",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Edex'
                 })
 
         return products_data
@@ -2018,13 +2020,13 @@ def scrap_goldguns() -> [dict]:
                 title, size = extract_data_from_title(title)
 
                 products_data.append({
-                    "city": "Poznań",
-                    'title': title,
-                    'price': price ,
-                    'link': link,
-                    'size': size,
-                    'available': availibility,
-                    'store': 'GoldGuns'
+                    "Miasto": "Poznań",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'GoldGuns'
                 })
 
         return products_data
@@ -2058,7 +2060,7 @@ STORES_SCRAPPERS = {
     "Cyngiel":scrap_cyngiel, #Warszawa/Siedlce/Kobyłka,
     "E-militaria":scrap_emilitaria, #Mirków
     "Edex":scrap_edex, #Jasło
-    "GoldGuns":scrap_goldguns
+    "GoldGuns":scrap_goldguns #Poznań
 }
 
 

@@ -1,4 +1,5 @@
 #Main class to manage rest of the code
+import concurrent
 import os
 import re
 import time
@@ -9,12 +10,15 @@ from threading import Thread
 #from streamlit_server_state import server_state, server_state_lock
 import streamlit as st
 import pandas as pd
+from narwhals import DataFrame
+
 import Scrapper
+from streamlit.components.v1 import html
 
 st.set_page_config(layout="wide")
 
 
-cities_per_region = {"Mazowieckie":["Warsaw","Płock","Prószków","Siedlce","Ostrołęka","Ciechanów","Siedlce"],
+cities_per_region = {"Mazowieckie":["Warsaw","Płock","Pruszków","Siedlce","Ostrołęka","Ciechanów","Siedlce"],
                      "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice","Aleksandrów Łódzki"],
                      "Wielkopolskie": ["Poznań"],
                      "Dolnośląskie":["Wrocław","Mirków"],
@@ -43,6 +47,36 @@ def check_if_last_load_was_at_least_x_minutes_ago(minutes:int):
         return True
     return True
 
+def normalize_data(df:list):
+    total_df = pd.DataFrame(df)
+    total_df = total_df[["Miasto", "Tytuł", "Cena", "Link", "Kaliber", "Dostępny", "Sklep"]]
+    total_df = Scrapper.map_sizes(total_df)
+
+    total_df = Scrapper.map_prices(total_df)
+
+    exclude_regex = r"[Pp]ude[lł]ko"
+
+    total_df = total_df[~total_df['Tytuł'].str.contains(exclude_regex, regex=True)]
+
+    total_df.columns = ["Miasto","Tytuł","Cena","Link","Kaliber","Dostępny","Sklep"]
+
+    def drop_all_odd(value):
+        subval = re.subn(r"[^0-9,\\.]", "", value, count=1)[0].replace(".00", "")
+        subval = re.sub("\\.{2}[0-9]+$", "", subval)
+        if subval.count(".") == 2:
+            subval = re.sub(r"\.[0-9]{2}\.?$", "", subval)
+
+        return subval
+
+    # total_df.to_excel("tmp.xlsx", index=False)
+
+    total_df["Cena"] = pd.to_numeric(total_df["Cena"].fillna('').apply(lambda x: drop_all_odd(x)),
+                                      errors='coerce')  # .fillna('-1')
+
+    total_df['Dostępny'] = total_df['Dostępny'].apply(lambda x: "T" if x  else ("N" if not x else "?"))
+
+    #re.sub(r"\.", "", "aa.bb.c")
+    return total_df
 
 def scrap_complete_data(list_of_stores:list=None):
 
@@ -65,52 +99,46 @@ def scrap_complete_data(list_of_stores:list=None):
     thread_list = []
     tmp_store_states = {key:"?" for key in Scrapper.STORES_SCRAPPERS.keys()}
 
-    for store_name, store_scrap in Scrapper.STORES_SCRAPPERS.items():
-        if store_name in excluded_stores:
-            continue
-        def pull_single_store(store_name_arg):
-            start_time = time.time()
-            try:
+    #for store_name, store_scrap in Scrapper.STORES_SCRAPPERS.items():
 
-                res = store_scrap()
-                complete_data.extend(res)
-                #st.session_state["pulled_data"][store_name_arg] = res
-                if not res:
-                #     print(f"EMPTY STORE: {store_name_arg}")
-                    msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data ({time_format(start_time)}s)")
-                #     #st.session_state["loaded_stores"][store_name_arg] = "ERROR"
+    def pull_single_store(store_name_arg):
+        start_time = time.time()
+        try:
 
-                    tmp_store_states[store_name_arg]= "ERROR"
-                else:
-                    msg = st.toast(f"OK - Successfully scrapped {store_name_arg} data({time_format(start_time)}s)")
-                #     #st.session_state["loaded_stores"][store_name_arg] = "OK"
+            res = Scrapper.STORES_SCRAPPERS[store_name_arg]()
+            complete_data.extend(res)
+            #st.session_state["pulled_data"][store_name_arg] = res
+            if not res:
+            #     print(f"EMPTY STORE: {store_name_arg}")
+                msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data ({time_format(start_time)}s)")
+            #     #st.session_state["loaded_stores"][store_name_arg] = "ERROR"
 
-                    #print(res[0])
-                    # if store_name_arg=="Astroclassic":
-                    #     print(res)
-                    tmp_store_states[store_name_arg]= f"OK ({round(time.time()-start_time,2)}s)"
+                tmp_store_states[store_name_arg]= "ERROR"
+            else:
+                msg = st.toast(f"OK - Successfully scrapped {store_name_arg} data({time_format(start_time)}s)")
+            #     #st.session_state["loaded_stores"][store_name_arg] = "OK"
 
-            except Exception as e:
-                print(e)
-                print(traceback.print_exc())
-                if "loaded_stores" not in st.session_state.keys():
-                    st.session_state["loaded_stores"] = {}
-                msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data({round(time_format(start_time))}s)")
-                st.session_state["loaded_stores"][store_name_arg] = "ERROR"
+                #print(res[0])
+                # if store_name_arg=="Astroclassic":
+                #     print(res)
+                tmp_store_states[store_name_arg]= f"OK ({round(time.time()-start_time,2)}s)"
 
-        thread_list = [x for x in thread_list if x.is_alive()]
+        except Exception as e:
+            print(e)
+            print(traceback.print_exc())
+            if "loaded_stores" not in st.session_state.keys():
+                st.session_state["loaded_stores"] = {}
+            msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data({round(time_format(start_time))}s)")
+            st.session_state["loaded_stores"][store_name_arg] = "ERROR"
 
-        while(len(thread_list)==5):
-            thread_list = [x for x in thread_list if x.is_alive()]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        executor.map(pull_single_store, list(Scrapper.STORES_SCRAPPERS.keys()))
 
 
+    #pull_single_store(store_name)
 
-        thread_list.append(Thread(target=pull_single_store,args=[store_name]))
-        thread_list[-1].start()
-        #pull_single_store(store_name)
-
-    while any([t.is_alive() for t in thread_list]):
-        time.sleep(1)
+    # while any([t.is_alive() for t in thread_list]):
+    #     time.sleep(1)
 
     #DATA_PULL_TOTAL_TIME = Scrapper.
     #st.session_state["complete_data"]
@@ -118,37 +146,18 @@ def scrap_complete_data(list_of_stores:list=None):
     st.success(f"Aktualizacja danych zajeła: {round(time.time()-start,2)}s")
     try:
 
-        total_df = Scrapper.map_sizes(pd.DataFrame(complete_data))
 
-        total_df = Scrapper.map_prices(total_df)
-
-        exclude_regex = r"[Pp]ude[lł]ko"
+        total_df = normalize_data(complete_data)
 
 
-        total_df = total_df[~total_df['title'].str.contains(exclude_regex, regex=True)]
 
-        def drop_all_odd(value):
-
-            subval =  re.subn(r"[^0-9,\\.]", "", value, count=1)[0].replace(".00","")
-            subval = re.sub("\\.{2}[0-9]+$","",subval)
-            if subval.count(".")==2:
-                subval = re.sub(r"\.[0-9]{2}\.?$","",subval)
-
-            return subval
-
-        #total_df.to_excel("tmp.xlsx", index=False)
-
-        total_df["price"] = pd.to_numeric(total_df["price"].fillna('').apply(lambda x: drop_all_odd(x)),errors='coerce')#.fillna('-1')
-
-        total_df['available'] = total_df['available'].apply(lambda x: "T" if x==True else ("N" if x==False else "?"))
-
-        re.sub(r"\.","","aa.bb.c")
         st.session_state["complete_df"] = total_df#.astype(str)
         st.session_state["filtered_df"] = total_df#.astype(str)
+
         st.session_state["complete_df"].to_excel("my_silly_database.xlsx",index=False)
         st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx") + timedelta(hours=2).total_seconds())
         st.balloons()
-        st.session_state["loaded_stores"] = {skey: "OK" if skey in st.session_state["complete_df"]["store"].to_list() else "Err" for skey in
+        st.session_state["loaded_stores"] = {skey: "OK" if skey in st.session_state["complete_df"]["Sklep"].to_list() else "Err" for skey in
                                              Scrapper.STORES_SCRAPPERS.keys()}
         global COMPLETE_DATA
 
@@ -162,14 +171,17 @@ def scrap_complete_data(list_of_stores:list=None):
 def try_to_retrieve_data():
     try:
         if "complete_df" not in st.session_state.keys():
-            st.session_state["complete_df"] = pd.DataFrame(columns=["city","title","price","link","size","available","store"])
+            st.session_state["complete_df"] = pd.DataFrame(columns=["Miasto","Tytuł","Cena","Link","Kaliber","Sklep","Dostępny"])
 
 
 
         data = pd.read_excel("my_silly_database.xlsx")
 
-        if len(st.session_state["complete_df"])!=0:
-            return
+
+
+
+        # if len(st.session_state["complete_df"])!=0:
+        #     return
 
         st.session_state["complete_df"] = data
         st.session_state["filtered_df"] = data
@@ -178,7 +190,7 @@ def try_to_retrieve_data():
         #     st.session_state['date_of_last_pull'] = file.read()
 
 
-        st.session_state["loaded_stores"] = {skey: "OK" if skey in list(set(st.session_state["complete_df"]["store"].to_list())) else "Err" for skey in
+        st.session_state["loaded_stores"] = {skey: "OK" if skey in list(set(st.session_state["complete_df"]["Sklep"].to_list())) else "Err" for skey in
                                              Scrapper.STORES_SCRAPPERS.keys()}
 
         #Refreshing statuses for stores
@@ -196,14 +208,6 @@ def try_to_retrieve_data():
 try_to_retrieve_data()
 
 
-@st.dialog("Quick instruction")
-def quick_instruction():
-
-
-    st.markdown("\n")
-    st.write(f"Once password is provided, select which stores you want to pull data from and press \\Pull data button\\")
-    st.write("It'll take up to 15 secs")
-
 
 @st.dialog("Polskie pestki")
 def ask_for_password():
@@ -220,9 +224,9 @@ def ask_for_password():
         st.rerun()
 
 
-if  "manual_read" in st.session_state.keys() and st.session_state["manual_read"]:
-    st.session_state["manual_read"] = True
-    quick_instruction()
+# if  "manual_read" in st.session_state.keys() and st.session_state["manual_read"]:
+#     st.session_state["manual_read"] = True
+#     quick_instruction()
 
 
 
@@ -320,7 +324,7 @@ st.markdown("\n")
 col1,col2 = st.columns([1,3])
 with col1:
 
-    pref_region = st.multiselect("Region",["Mazowieckie","Dolnośląskie"])
+    pref_region = st.multiselect("Region",cities_per_region.keys())
 
     if pref_region:
 
@@ -350,21 +354,26 @@ with col1:
 
         if pref_city:
             st.session_state["filtered_df"] = st.session_state["filtered_df"][
-                st.session_state["filtered_df"]["city"].isin(pref_city)]
+                st.session_state["filtered_df"]["Miasto"].isin(pref_city)]
 
         if pref_name:
-            st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.lower().str.contains(pref_name, na=False)]
+            st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["Tytuł"].str.lower().str.contains(pref_name, na=False)]
 
         if pref_stores:
             st.session_state["filtered_df"] = st.session_state["filtered_df"][
-            st.session_state["filtered_df"]["store"].isin(pref_stores)]
+            st.session_state["filtered_df"]["Sklep"].isin(pref_stores)]
 
         if pref_size:
             st.session_state["filtered_df"] = st.session_state["filtered_df"][
-            st.session_state["filtered_df"]["size"].isin(pref_size)]
+            st.session_state["filtered_df"]["Kaliber"].isin(pref_size)]
 
+        if pref_available:
+            st.session_state["filtered_df"] = st.session_state["filtered_df"].query("Dostępny == 'T'")
 
-        st.session_state["filtered_df"] = st.session_state["filtered_df"].query("available == 'T'")
+        if pref_region:
+            #proper_cities
+
+            st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["Miasto"].isin(cities)]
 
 
     else:
@@ -373,9 +382,10 @@ with col1:
 with col2:
     #if "passok" in st.session_state.keys() and st.session_state["passok"]:
     st.dataframe(st.session_state["filtered_df"],
-                 column_config={"link": st.column_config.LinkColumn(
-            "link", display_text="Oferta"
-        )
+                 column_config={"Link": st.column_config.LinkColumn(
+            "Link", display_text="Oferta"
+        ),
+
     })
     st.text(f"Ilość przefiltrowanych rekordów: {len(st.session_state["filtered_df"])}")
     st.text(f"Całkowita ilość rekordów: {len(st.session_state["complete_df"])}")
@@ -414,3 +424,9 @@ if "admin" in params.keys():
 
 
 st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")
+
+
+#Adding call buttons to df
+#document.querySelectorAll('[data-testid="stDataFrameResizable"]');
+
+
