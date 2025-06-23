@@ -1,24 +1,23 @@
 #Main class to manage rest of the code
 import concurrent
+import locale
 import os
 import re
 import time
 import traceback
-from csv import excel
 from datetime import datetime, timedelta
-from threading import Thread
-#from streamlit_server_state import server_state, server_state_lock
 import streamlit as st
 import pandas as pd
-from narwhals import DataFrame
+from streamlit import download_button
 
 import Scrapper
-from streamlit.components.v1 import html
 
 st.set_page_config(layout="wide")
 
+locale.setlocale(locale.LC_TIME, 'pl_PL.UTF-8')
 
-cities_per_region = {"Mazowieckie":["Warsaw","Płock","Pruszków","Siedlce","Ostrołęka","Ciechanów","Siedlce"],
+
+cities_per_region = {"Mazowieckie":["Warszawa","Płock","Pruszków","Siedlce","Ostrołęka","Ciechanów","Siedlce"],
                      "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice","Aleksandrów Łódzki"],
                      "Wielkopolskie": ["Poznań"],
                      "Dolnośląskie":["Wrocław","Mirków"],
@@ -257,28 +256,28 @@ COMPLETE_DATA=pd.DataFrame()
 LOADED_STORES = []
 DATA_PULL_TOTAL_TIME=0
 
-try:
-    st.subheader("Obecnie dostępne sklepy :)")
-    total_amount_of_stores = len(st.session_state["loaded_stores"])
-    cols = st.columns(8)
-    count=0
-
-    stores = list(st.session_state["loaded_stores"].items())
-    stores.sort(key=lambda x:x[0].lower())
-    for store,status in stores:
-        if count==8:
-            count=0
-            cols=st.columns(8)
-        with cols[count]:
-            if status=="OK":
-                st.success(store)
-            else:
-                st.error(store)
-            #st.text(f"{store} - {status}")
-            count+=1
-
-except Exception as e:
-    print(e)
+# try:
+#     st.subheader("Obecnie dostępne sklepy :)")
+#     total_amount_of_stores = len(st.session_state["loaded_stores"])
+#     cols = st.columns(8)
+#     count=0
+#
+#     stores = list(st.session_state["loaded_stores"].items())
+#     stores.sort(key=lambda x:x[0].lower())
+#     for store,status in stores:
+#         if count==8:
+#             count=0
+#             cols=st.columns(8)
+#         with cols[count]:
+#             if status=="OK":
+#                 st.success(store)
+#             else:
+#                 st.error(store)
+#             #st.text(f"{store} - {status}")
+#             count+=1
+#
+# except Exception as e:
+#     print(e)
 
 st.markdown("\n")
 
@@ -309,6 +308,7 @@ st.markdown("\n")
 # st.markdown("\n")
 st.markdown("\n")
 #if "passok" in st.session_state.keys() and st.session_state["passok"]:
+
 st.write(f"Ostatnie odświeżenie danych: {'Brak' if 'date_of_last_pull' not in st.session_state.keys() else 
 st.session_state['date_of_last_pull']}")
 #st.button("Refresh current data", on_click=scrap_complete_data,args=[checkboxes],use_container_width=True)
@@ -324,35 +324,36 @@ st.markdown("\n")
 col1,col2 = st.columns([1,3])
 with col1:
 
-    pref_region = st.multiselect("Region",cities_per_region.keys())
+    pref_region = st.multiselect("Województwo",cities_per_region.keys(),placeholder="Województwo")
 
     if pref_region:
 
         cities = [x for xskey, xs in cities_per_region.items() for x in xs if xskey in pref_region]
-        pref_city = st.multiselect("Miasto",cities)
+        pref_city = st.multiselect("Miasto",cities,placeholder="Miasto")
     else:
-        pref_city = st.multiselect("Miasto",[x for xs in  cities_per_region.values() for x in xs])
+        pref_city = st.multiselect("Miasto",[x for xs in  cities_per_region.values() for x in xs],placeholder="Miasto")
 
 
 
 
-    pref_name = st.text_input("Podaj pełną/częściową nazwę")
+    pref_name = st.text_input("Podaj pełną/częściową nazwę",placeholder="")
 
     # if pref_name:
     #     st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
     #     #print(f"New length : {len(st.session_state['filtered_df'])}")
     #
-    pref_stores = st.multiselect("Wybrane sklepy",sorted(list(Scrapper.STORES_SCRAPPERS.keys())))
+    pref_stores = st.multiselect("Wybrane sklepy",sorted(list(Scrapper.STORES_SCRAPPERS.keys())),placeholder="")
 
 
-    pref_size = st.multiselect("Wybierz kaliber/rozmiar",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]))
+    pref_size = st.multiselect("Wybierz kaliber/rozmiar",Scrapper.get_all_existing_sizes(st.session_state["complete_df"]),placeholder="")
     #
-    pref_available = st.checkbox("Pokaż tylko dostępne")
+    pref_available = st.checkbox("Pokaż tylko dostępne",help="Zaznacz aby wyświetlić tylko dostępne produkty. Produkty niedostępne oraz bez znanego statusu (sklep nie udostępnia informacji) będą ukryte)")
 
-    if pref_size or pref_name or pref_stores or pref_available or pref_region:
+    if pref_size or pref_name or pref_stores or pref_available or pref_region or pref_city:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
         if pref_city:
+
             st.session_state["filtered_df"] = st.session_state["filtered_df"][
                 st.session_state["filtered_df"]["Miasto"].isin(pref_city)]
 
@@ -422,6 +423,29 @@ params = st._get_query_params()
 if "admin" in params.keys():
     st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help= "Naciśnij aby przeładować dane (powinno zająć do czterech minut)" )
 
+
+try:
+    st.subheader("Obecnie dostępne sklepy :)")
+    total_amount_of_stores = len(st.session_state["loaded_stores"])
+    cols = st.columns(8)
+    count=0
+
+    stores = list(st.session_state["loaded_stores"].items())
+    stores.sort(key=lambda x:x[0].lower())
+    for store,status in stores:
+        if count==8:
+            count=0
+            cols=st.columns(8)
+        with cols[count]:
+            if status=="OK":
+                st.success(store)
+            else:
+                st.error(store)
+            #st.text(f"{store} - {status}")
+            count+=1
+
+except Exception as e:
+    print(e)
 
 st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")
 
