@@ -55,6 +55,7 @@ def normalize_data(df:list):
 
     total_df = total_df[~total_df['Tytuł'].str.contains(exclude_regex, regex=True)]
 
+
     total_df.columns = ["Miasto","Tytuł","Cena","Link","Kaliber","Dostępny","Sklep"]
 
     def drop_all_odd(value):
@@ -72,14 +73,19 @@ def normalize_data(df:list):
 
     total_df['Dostępny'] = total_df['Dostępny'].apply(lambda x: "T" if x  else ("N" if not x else "?"))
 
+    #adjusting prices for box size (if available)
+    total_df = Scrapper.map_prices_by_box_size(total_df)
+
+
     #re.sub(r"\.", "", "aa.bb.c")
     return total_df
 
+
 def scrap_complete_data(list_of_stores:list=None):
 
-    if "adminpass" not in st.session_state.keys():
-        ask_for_password()
-        return
+    # if "adminpass" not in st.session_state.keys():
+    #     ask_for_password()
+    #     return
 
     if "loaded_stores" not in st.session_state.keys():
         st.session_state["loaded_stores"] = {}
@@ -207,17 +213,28 @@ try_to_retrieve_data()
 
 
 @st.dialog("Polskie pestki")
+def basic_info_prompt(info):
+    st.write(info)
+
+@st.dialog("Polskie pestki")
 def ask_for_password():
+    if "admin" not in st.session_state.keys():
+        title = st.write(f"Podaj hasło admina")
+        reason = st.text_input("")
+        submit = st.button("Submit")
 
-    st.write(f"Podaj hasło admina")
-    reason = st.text_input("")
+        if submit:
+            if not reason=="gunlobby":
+                st.toast("Tylko admin może odświeżać dane")
+            else:
+                st.toast("Hasło zaakceptowane!")
+                st.session_state["adminpass"]=True
+                st.session_state["download_order"]=True
 
-    if st.button("Submit"):
-        if not reason=="gunlobby":
-            st.toast("Tylko admin może chwilowo odświeżać dane")
-        else:
-            st.toast("Hasło zaakceptowane!")
-            st.session_state["adminpass"]=True
+                st.rerun()
+    else:
+        st.session_state["download_order"] = True
+
         st.rerun()
 
 
@@ -403,8 +420,6 @@ def time_format(start_time) -> float:
 st.markdown("\n")
 
 
-if "admin" in st._get_query_params().keys():
-    st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,help= "Naciśnij aby przeładować dane (powinno zająć do czterech minut)" )
 
 
 try:
@@ -430,6 +445,18 @@ try:
 except Exception as e:
     print(e)
 
+
+if "admin" in st._get_query_params().keys():
+    st.button("Odśwież dane", on_click=ask_for_password,args=[],use_container_width=True,help= "Naciśnij aby przeładować dane (powinno zająć do czterech minut)" )
+
+if "download_order" in st.session_state.keys() and st.session_state["download_order"]:
+    scrap_complete_data()
+    st.session_state["download_order"]= False
+    basic_info_prompt(f"Dane odświeżone! Ilość pobranych ofert: {len(st.session_state['complete_df'])}" )
+
+#Scrapper.map_prices_by_box_size(st.session_state["complete_df"])
+
 st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")
 
 
+basic_info_prompt("Praca wre! Strona wciąż jest w budowie, mogą zdarzać się błędy")

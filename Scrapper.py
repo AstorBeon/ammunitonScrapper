@@ -13,7 +13,7 @@ headers = {
 
 AVAILABLE_AMMO_SIZES = ["762x25","243Win","7×64","30-30 WIN",".222 REM","223 REM","223REM","223Rem","338 Win.",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm", "308", ".22LR","22LR", "22 LR",".22","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",".300 BLK",".300",
                         "kal.380Auto","kal.50AE", ".30","0.38",".38","12/76","22lr","300 AAC","9x19MM",".25","6.5","12/67","12/76","7,63",
-                        "kal.32",".17","30-06"]
+                        "kal.32",".17","30-06","5,6MM"]
 AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})",r"(\d{1,3}x\d{2})", r"(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
 AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9|9mm|9MM|9 mm|9 MM|9x19|9 PARA|9 SHORT|9×19|9x19MM)":"9mm",
                                 r"(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr|22lr)":".22LR",
@@ -75,13 +75,36 @@ def get_all_existing_sizes(df:DataFrame)->[str]:
     return options
 
 def map_sizes(data:pd.DataFrame) -> pd.DataFrame:
-    print(data.columns)
     data['Kaliber'] = data["Kaliber"].apply(lambda x:map_single_size(str(x)) )
 
     return data
 
 def map_prices(data:pd.DataFrame) -> pd.DataFrame:
     data["Cena"] = data["Cena"].apply(trim_price)
+    return data
+
+def _single_title_price_map(row):
+    #opak. 25szt.
+    #op. 25szt.(zł/op.)
+    #tytul, cena = row["Tytuł"],row["Cena"]
+    per_box = re.search(r"((opak\. ?\d+szt\.)|(op\. ?\d+szt\.\(zł/op\.\)))",row["Tytuł"])
+
+    if per_box is not None:
+        match_string = per_box.group(0)
+        amount = re.sub(r"[^0-9]","",match_string)
+        #print(f"{match_string} -> {amount}")
+        row["Tytuł"] = row["Tytuł"].replace(match_string,"")
+        row["Cena"] = row["Cena"]/int(amount)
+        #print(f"{tytul} - {cena}")
+
+    return row
+
+
+def map_prices_by_box_size(data:pd.DataFrame) -> pd.DataFrame:
+    # x = data.apply(lambda x: _single_title_price_map(x), axis=1)
+    # print(x)
+    # return
+    data= data.apply(lambda x: _single_title_price_map(x),axis=1 )
     return data
 
 def scrap_top_gun() -> [dict]:
@@ -585,7 +608,8 @@ def scrap_bestgun() -> [dict]:
                 availability = content.find_all("li")[-1].get_text() == "Dostępność:  Dostępny"
 
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
-                price = price_tag.get_text(strip=True) if price_tag else ""
+                price = price_tag.get_text(strip=True).replace(" zł/ szt.","") if price_tag else ""
+
                 link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
                 title, size = extract_data_from_title(title)
                 products_data.append({
@@ -1744,6 +1768,10 @@ def scrap_bazooka() -> [dict]:
                 if size is None:
                     title, size = extract_data_from_title(title)
 
+                if "(brak)" in title:
+                    title = title.replace("(brak)","")
+                    price = None
+                    availibility = False
 
 
                 products_data.append({
@@ -2063,4 +2091,5 @@ STORES_SCRAPPERS = {
     "GoldGuns":scrap_goldguns #Poznań
 }
 
-
+for c in scrap_kaliber():
+    print(c)
