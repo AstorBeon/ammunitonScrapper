@@ -8,13 +8,11 @@ import traceback
 from datetime import datetime, timedelta
 import streamlit as st
 import pandas as pd
-from streamlit import download_button
-
 import Scrapper
 
 st.set_page_config(layout="wide")
 
-locale.setlocale(locale.LC_TIME, 'pl_PL.UTF-8')
+#locale.setlocale(locale.LC_TIME, 'pl_PL.UTF-8')
 
 
 cities_per_region = {"Mazowieckie":["Warszawa","Płock","Pruszków","Siedlce","Ostrołęka","Ciechanów","Siedlce"],
@@ -381,7 +379,6 @@ with col1:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
 with col2:
-    #if "passok" in st.session_state.keys() and st.session_state["passok"]:
     st.dataframe(st.session_state["filtered_df"],
                  column_config={"Link": st.column_config.LinkColumn(
             "Link", display_text="Oferta"
@@ -403,25 +400,11 @@ def time_format(start_time) -> float:
     DATA_PULL_TOTAL_TIME += dif
     return round(dif,2)
 
-
-
-#if not st.session_state["complete_df"] is None:
-
-            # def disappear(prompt):
-            #     time.sleep(3)
-            #     print("DISAPPEARING")
-            #     prompt.empty()
-            #
-            # Thread(target=disappear,args=[msg]).start()
-
-#if not st.session_state["pulled_data"]:
 st.markdown("\n")
 
-#if not check_if_last_load_was_at_least_x_minutes_ago(minutes=60):
-is_disabled = False#not check_if_last_load_was_at_least_x_minutes_ago(minutes=720)
-params = st._get_query_params()
-if "admin" in params.keys():
-    st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,disabled =is_disabled,help= "Naciśnij aby przeładować dane (powinno zająć do czterech minut)" )
+
+if "admin" in st._get_query_params().keys():
+    st.button("Odśwież dane", on_click=scrap_complete_data,args=[],use_container_width=True,help= "Naciśnij aby przeładować dane (powinno zająć do czterech minut)" )
 
 
 try:
@@ -448,9 +431,5 @@ except Exception as e:
     print(e)
 
 st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")
-
-
-#Adding call buttons to df
-#document.querySelectorAll('[data-testid="stDataFrameResizable"]');
 
 
