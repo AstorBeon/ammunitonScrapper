@@ -458,5 +458,6 @@ if "download_order" in st.session_state.keys() and st.session_state["download_or
 
 st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")
 
-
-basic_info_prompt("Praca wre! Strona wciąż jest w budowie, mogą zdarzać się błędy")
+if "was_informed_about_wip" not in st.session_state:
+    basic_info_prompt("Praca wre! Strona wciąż jest w budowie, mogą zdarzać się błędy")
+    st.session_state["was_informed_about_wip"]=True
