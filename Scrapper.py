@@ -11,9 +11,9 @@ headers = {
 }
 
 
-AVAILABLE_AMMO_SIZES = ["762x25","243Win","7×64","30-30 WIN",".222 REM","223 REM","223REM","223Rem","338 Win.",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm", "308", ".22LR","22LR", "22 LR",".22","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",".300 BLK",".300",
-                        "kal.380Auto","kal.50AE", ".30","0.38",".38","12/76","22lr","300 AAC","9x19MM",".25","6.5","12/67","12/76","7,63",
-                        "kal.32",".17","30-06","5,6MM"]
+AVAILABLE_AMMO_SIZES = ["Loftka","Śrut","Kula Gumowa",".308 WIN",".308win","762x25","243Win","7×64","30-30 WIN",".222 REM","223 REM","223REM","223Rem","338 Win.",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm", "308", ".22LR","22LR", "22 LR",".22","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",".300 BLK",".300",
+                        "kal.380Auto","kal.50AE", ".30",".38 SPL","0.38",".38","12/76","22lr","300 AAC","9x19MM",".25","6.5","12/67","12/76","7,63",
+                        "kal.32",".17","30-06","5,6MM",".454",".44","9x18","7,62x25"]
 AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})",r"(\d{1,3}x\d{2})", r"(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
 AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9|9mm|9MM|9 mm|9 MM|9x19|9 PARA|9 SHORT|9×19|9x19MM)":"9mm",
                                 r"(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr|22lr)":".22LR",
@@ -58,6 +58,9 @@ def map_single_size(size:str):
     return size
 
 def trim_price(price_text:str) -> str:
+    if type(price_text) != str:
+        price_text = str(price_text)
+
     return re.sub(r"[^0-9,\\.]","",price_text).replace(",",".")
 
 
@@ -1736,9 +1739,9 @@ def scrap_vismag() -> [dict]:
     return scrape_all_products()
 
 def scrap_bazooka() -> [dict]:
-    base_url = "https://bazooka.waw.pl/amunicja-2"
+    base_url = "https://bazooka.waw.pl/?amunicja"
 
-    def scrape_all_products():
+    def scrape_all_products() -> list:
         products_data = []
 
 
@@ -1749,29 +1752,34 @@ def scrap_bazooka() -> [dict]:
             return
 
         soup = BeautifulSoup(response.text, 'html.parser')
-        product_containers = soup.find_all("li",class_="ajax_block_product")
+        product_container = soup.find(id="body")
 
         #h2 rozmiar
         #UL - oferty
             #LI - poszczególne produkty
 
-        sizes = soup.find_all("h2")[1:]
-        uls = soup.find_all("ul")
+        sizes = product_container.find_all("p",class_="Heading2")[1:]
+        uls = product_container.find_all("ul")
+
         for size,ul in zip(sizes,uls):
             size = size.get_text(strip=True) if "Pozostałe" not in size.get_text(strip=True) else None
-
+            print(f"Size: {size}")
             for li in ul.find_all("li"):
-
+                print("LI")
                 line = li.get_text(strip=True) #strong 0 cena
-                price = re.sub(r"([^0-9,\\.])","",li.find("strong").get_text(strip=True))[:-1]
+                print(li)
+                price = re.sub(r"([^0-9,\\.])","",li.find("span",class_="StrongEmphasis").get_text(strip=True))[:-1]
                 title = line.replace(price,"")
                 if size is None:
                     title, size = extract_data_from_title(title)
-
+                availibility = True
                 if "(brak)" in title:
                     title = title.replace("(brak)","")
                     price = None
                     availibility = False
+
+                title = title.replace("(zł/szt.)","")
+                title=title.replace("\xa0"," ")
 
 
                 products_data.append({
@@ -1780,14 +1788,15 @@ def scrap_bazooka() -> [dict]:
                     "Cena": price ,
                     "Link": f"https://www.bazooka.sklep.pl/search?q={title.replace(' ','+').replace('\\xa','')}",
                     "Kaliber": size,
-                    "Dostępny": True,
+                    "Dostępny": availibility,
                     "Sklep": 'Bazooka'
                 })
 
 
         return products_data
 
-    
+    tmp = scrape_all_products()
+    print(tmp)
     return scrape_all_products()
 
 def scrap_cyngiel() -> [dict]:
