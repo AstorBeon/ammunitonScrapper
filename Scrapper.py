@@ -159,7 +159,7 @@ def scrap_top_gun() -> [dict]:
                     "Miasto":"Warszawa",
                     "Sklep":"Top gun",
                     "Tytuł": title,
-                    'link': link,
+                    'Link': link,
                     "Kaliber": size,
                     "Cena": price,
                     "Dostępny":available
@@ -232,7 +232,7 @@ def scrap_strefa_celu() -> [dict]:
                     "Sklep":"Strefa Celu",
                     "Cena": price,
                     "Dostępny":available.get_text(strip=True)=="Dostępny" if available else False,
-                    'link': link
+                    'Link': link
                 })
 
         return products_data
@@ -306,7 +306,7 @@ def scrap_garand() -> [dict]:
                     "Sklep":"Garand",
                     "Cena": price,
                     "Dostępny": available,
-                    'link': link
+                    'Link': link
                 })
                 #print(products_data[-1])
 
@@ -376,7 +376,7 @@ def scrap_jmbron() -> [dict]:
                     "Miasto": "Warszawa",
                     "Tytuł": title,
                     "Cena": price,
-                    'link': link,
+                    'Link': link,
                     "Kaliber":size,
                     "Dostępny": availability,
                     "Sklep": "JM Bron"
@@ -441,7 +441,7 @@ def scrap_magazynuzbrojenia() -> [dict]:
                     "Tytuł": title,
                     "Cena": price,
                     "Kaliber":size,
-                    'link': link,
+                    'Link': link,
                     "Dostępny": availability,
                     "Sklep":"Magazyn uzbrojenia"
                 })
@@ -549,7 +549,7 @@ def scrap_salonbroni() -> [dict]:
                 "Tytuł": title,
                 "Cena": price,
                 "Kaliber":size,
-                'link': link,
+                'Link': link,
                 "Dostępny": availability,
                 "Sklep":"Salon broni"
             })
@@ -1763,11 +1763,11 @@ def scrap_bazooka() -> [dict]:
 
         for size,ul in zip(sizes,uls):
             size = size.get_text(strip=True) if "Pozostałe" not in size.get_text(strip=True) else None
-            print(f"Size: {size}")
+
             for li in ul.find_all("li"):
-                print("LI")
+
                 line = li.get_text(strip=True) #strong 0 cena
-                print(li)
+
                 price = re.sub(r"([^0-9,\\.])","",li.find("span",class_="StrongEmphasis").get_text(strip=True))[:-1]
                 title = line.replace(price,"")
                 if size is None:
@@ -2177,3 +2177,5 @@ STORES_SCRAPPERS = {
     "Gun Monkey":scrap_gunmonkey #Jaworzno
 }
 
+for s in scrap_salonbroni():
+    print(s)
