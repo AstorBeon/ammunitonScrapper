@@ -22,7 +22,8 @@ cities_per_region = {"Mazowieckie":["Warszawa","Płock","Pruszków","Siedlce","O
                      "Małopolskie":["Kraków"],
                      "Lubelskie":["Lublin"],
                      "Podkarpackie":["Jasło"],
-                     "Śląskie":["Jaworzno","Częstochowa"]}
+                     "Śląskie":["Jaworzno","Częstochowa"],
+                     "Zachodniopomorskie":["Kołobrzeg"]}
 
 # if "loaded_stores" not in st.session_state.keys():
 #     all_pulled_stores = list(Scrapper.STORES_SCRAPPERS.keys())

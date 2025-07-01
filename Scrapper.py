@@ -2227,8 +2227,7 @@ def scrap_gunszop() -> list[dict]:
 
     return scrape_all_products()
 
-def scrap_luska\
-                () -> list[dict]:
+def scrap_luska() -> list[dict]:
     base_url = 'https://luska.pl/category/amunicja'
 
 
@@ -2299,6 +2298,92 @@ def scrap_luska\
 
     return scrape_all_products()
 
+def scrap_polarms() -> list[dict]:
+    base_url = 'https://polarms.pl/pl/c/Amunicja/2'
+
+
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        try:
+            return max([int(x.get_text(strip=True)) for x in soup.find("ul",class_="paginator").find_all("li") if x.get_text(strip=True).isdigit()])
+
+        except:
+            return 1
+
+
+
+
+    def scrape_all_products():
+        products_data = []
+
+        for page in range(get_total_pages()):
+
+            url = f'{base_url}/{page}'
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            product_containers = soup.find_all('div',class_="product")
+            for product in product_containers:
+
+
+                product_id = product.find('a')['href'].split("/")[-1]
+
+                def get_availibility(product_id:str):
+                    res = requests.get(f"https://polarms.pl/product/getproduct/id/{product_id}")
+                    return res.json()
+
+
+                data = get_availibility(product_id)
+
+                title = data["name"]
+                price = data["price"]["gross"]["base_float"]
+                availibility = data["availability"]["name"] == "DOSTĘPNY"
+                description = BeautifulSoup(data["description"], 'html.parser')
+                strongs = description.find_all("strong")
+                if len(strongs) > 0:
+                    payload = strongs[-1].get_text(strip=True)
+                    if "Pakowana" in payload or "Opakowanie" in payload:
+                        units = int(re.sub("[^0-9]","",payload))
+                        price =round(price/units,2)
+                #availibility =  "DOSTĘPNY" in  product.find("div",class_="availability").find("span",class_="second").get_text()
+
+
+
+                #price = re.search(r"\d+,\d+",price).group(0)
+                link = f"https://polarms.pl/{product.find('a')['href']}"
+                title, size = extract_data_from_title(title)
+
+
+
+
+                products_data.append({
+                    "Miasto": "Kołobrzeg",
+                    "Tytuł": title,
+                    "Cena": str(price) ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Polarms'
+                })
+
+                #print(products_data[-1])
+
+
+
+        return products_data
+
+    return scrape_all_products()
+
 
 
 STORES_SCRAPPERS = {
@@ -2330,5 +2415,7 @@ STORES_SCRAPPERS = {
     "GoldGuns":scrap_goldguns, #Poznań
     "Gun Monkey":scrap_gunmonkey, #Jaworzno,
     "Gunszop":scrap_gunszop, #Bełchatów/Częstochowa
-    "Łuska":scrap_luska #Śrem
+    "Łuska":scrap_luska, #Śrem
+    "Polarms":scrap_polarms #Kołobrzeg
 }
+
