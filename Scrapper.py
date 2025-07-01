@@ -1,5 +1,6 @@
 import math
 import re
+from typing import Any
 from urllib.parse import urljoin
 import pandas as pd
 import requests
@@ -110,7 +111,7 @@ def map_prices_by_box_size(data:pd.DataFrame) -> pd.DataFrame:
     data= data.apply(lambda x: _single_title_price_map(x),axis=1 )
     return data
 
-def scrap_top_gun() -> [dict]:
+def scrap_top_gun() -> list[dict]:
     base_url = 'https://sklep.top-gun.pl/5-amunicja'
 
     def get_total_pages():
@@ -169,7 +170,7 @@ def scrap_top_gun() -> [dict]:
     return scrape_all_products()
     
 
-def scrap_strefa_celu() -> [dict]:
+def scrap_strefa_celu() -> list[dict]:
 
     # Base URL for the ammunition section
     base_url = 'https://strefacelu.pl/category/bron-palna-i-amunicja-amunicja-sportowa'
@@ -241,7 +242,7 @@ def scrap_strefa_celu() -> [dict]:
     product_list = scrape_all_products()
     return product_list
 
-def scrap_garand() -> [dict]:
+def scrap_garand() -> list[dict]:
     from urllib.parse import urljoin
     base_url = 'https://garand.com.pl/category/amunicja'
 
@@ -316,7 +317,7 @@ def scrap_garand() -> [dict]:
     product_list = scrape_all_products()
     return product_list
 
-def scrap_jmbron() -> [dict]:
+def scrap_jmbron() -> list[dict]:
     # Base URL for the ammunition section
     base_url = 'https://jmbron.pl/kategoria-produktu/amunicja/'
 
@@ -387,7 +388,7 @@ def scrap_jmbron() -> [dict]:
     product_list = scrape_all_products()
     return product_list
 
-def scrap_magazynuzbrojenia() -> [dict]:
+def scrap_magazynuzbrojenia() -> list[dict]:
     base_url = 'https://sklep.magazynuzbrojenia.pl/pl/c/Amunicja/1'
 
 
@@ -450,7 +451,7 @@ def scrap_magazynuzbrojenia() -> [dict]:
 
     return scrape_all_products()
 
-def scrap_kaliber() -> [dict]:
+def scrap_kaliber() -> list[dict]:
     base_url = 'https://kaliber.pl/184-amunicja'
 
 
@@ -517,7 +518,7 @@ def scrap_kaliber() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_salonbroni() -> [dict]:
+def scrap_salonbroni() -> list[dict]:
     base_url = 'https://www.salonbroni.pl/amunicja'
 
     url = f'https://www.salonbroni.pl/amunicja'
@@ -564,7 +565,7 @@ def scrap_salonbroni() -> [dict]:
     
     return products
 
-def scrap_bestgun() -> [dict]:
+def scrap_bestgun() -> list[dict]:
     base_url = 'https://www.bestgun.pl/amunicja-c-260.html'
 
     def get_total_pages():
@@ -628,7 +629,7 @@ def scrap_bestgun() -> [dict]:
         return products_data
     return scrape_all_products()
 
-def scrap_mex_armory() -> [dict]:
+def scrap_mex_armory() -> list[dict]:
     base_url = 'https://mexarmory.pl/product-category/amunicja'
 
     def get_total_pages():
@@ -688,7 +689,7 @@ def scrap_mex_armory() -> [dict]:
 
     return scrape_all_products()
 
-def scrap_gun_eagle_rusznikarnia() -> [dict]:
+def scrap_gun_eagle_rusznikarnia() -> list[dict]:
     base_url = 'https://www.gun-eagle.pl/amunicja-c-7.html'
 
     def get_total_pages():
@@ -759,7 +760,7 @@ def scrap_gun_eagle_rusznikarnia() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_top_shot() -> [dict]:
+def scrap_top_shot() -> list[dict]:
     base_url = 'https://sklep.top-shot.pl/138-amunicja'
 
 
@@ -833,7 +834,7 @@ def scrap_top_shot() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_kwatermistrz() -> [dict]:
+def scrap_kwatermistrz() -> list[dict]:
     base_url = 'https://www.kwatermistrz.com.pl/amunicja'
 
 
@@ -908,7 +909,7 @@ def scrap_kwatermistrz() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_c4guns() -> [dict]:
+def scrap_c4guns() -> list[dict]:
     base_url = 'https://c4guns.sklep.pl/16-amunicja'
 
 
@@ -988,7 +989,7 @@ def scrap_c4guns() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_puchacz() -> [dict]:
+def scrap_puchacz() -> list[dict]:
     base_url = 'https://www.puchacz.net/amunicja-c-6.html?'
 
 
@@ -1072,7 +1073,7 @@ def scrap_puchacz() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_rparms() -> [dict]:
+def scrap_rparms() -> list[dict]:
     base_url = 'https://rparms.pl/4-amunicja'
 
 
@@ -1178,7 +1179,7 @@ def scrap_rparms() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_astorclassic() -> [dict]:
+def scrap_astorclassic() -> list[dict]:
     base_url = 'https://astroclassic.pl/kat/amunicja/'
 
 
@@ -1287,7 +1288,7 @@ def scrap_astorclassic() -> [dict]:
     return scrape_all_products()
 
 #https://gunsmasters.pl/produkty/amunicja,2,55
-def scrap_gunsmasters() -> [dict]:
+def scrap_gunsmasters() -> list[dict]:
     base_url = 'https://gunsmasters.pl/produkty/dostępność=dostępny-/amunicja,2,55'
 
 
@@ -1367,7 +1368,7 @@ def scrap_gunsmasters() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_knieja() -> [dict]:
+def scrap_knieja() -> list[dict]:
     base_url = 'https://www.knieja.com.pl/30-amunicja-i-elaboracja'
 
 
@@ -1448,7 +1449,7 @@ def scrap_knieja() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_atenagun() -> [dict]:
+def scrap_atenagun() -> list[dict]:
     base_url = 'https://www.atenagun.pl/kategoria/amunicja'
 
 
@@ -1519,7 +1520,7 @@ def scrap_atenagun() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_snajper() -> [dict]:
+def scrap_snajper() -> list[dict]:
     base_url = 'https://sklepsnajper.pl/kategoria/amunicja/'
 
 
@@ -1595,7 +1596,7 @@ def scrap_snajper() -> [dict]:
 
     return scrape_all_products()
 
-def scrap_coltwroclaw() -> [dict]:
+def scrap_coltwroclaw() -> list[dict]:
     base_url = 'https://coltwroclaw.pl/18-amunicja'
 
     def get_total_pages():
@@ -1664,7 +1665,7 @@ def scrap_coltwroclaw() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_vismag() -> [dict]:
+def scrap_vismag() -> list[dict]:
     base_url = 'https://bron-sklep.pl/11-amunicja'
 
 
@@ -1738,7 +1739,7 @@ def scrap_vismag() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_bazooka() -> [dict]:
+def scrap_bazooka() -> list[dict]:
     base_url = "https://bazooka.waw.pl/?amunicja"
 
     def scrape_all_products() -> list:
@@ -1799,7 +1800,7 @@ def scrap_bazooka() -> [dict]:
     print(tmp)
     return scrape_all_products()
 
-def scrap_cyngiel() -> [dict]:
+def scrap_cyngiel() -> list[dict]:
     base_url = 'https://cyngiel.com.pl/sklep-z-bronia/amunicja-do-broni-palnej/?products-per-page=all'
 
 
@@ -1857,7 +1858,7 @@ def scrap_cyngiel() -> [dict]:
     
     return scrape_all_products()
 
-def scrap_emilitaria() -> [dict]:
+def scrap_emilitaria() -> list[dict]:
     base_url = 'https://e-militaria.pl/amunicja-946'
 
 
@@ -1935,7 +1936,7 @@ def scrap_emilitaria() -> [dict]:
 
     return scrape_all_products()
 
-def scrap_edex() -> [dict]:
+def scrap_edex() -> list[dict]:
     base_url = 'https://edexbron.pl/kategoria/amunicja-1'
 
 
@@ -2003,7 +2004,7 @@ def scrap_edex() -> [dict]:
 
     return scrape_all_products()
 
-def scrap_goldguns() -> [dict]:
+def scrap_goldguns() -> list[dict]:
     base_url = 'https://goldguns.pl/pl/c/AMUNICJA/288'
 
 
@@ -2070,7 +2071,7 @@ def scrap_goldguns() -> [dict]:
 
     return scrape_all_products()
 
-def scrap_gunmonkey() -> [dict]:
+def scrap_gunmonkey() -> list[dict]:
     base_url = 'https://gunmonkey.pl/amunicja'
 
 
@@ -2145,7 +2146,7 @@ def scrap_gunmonkey() -> [dict]:
 
     return scrape_all_products()
 
-def scrap_gunszop() -> [dict]:
+def scrap_gunszop() -> list[dict]:
     base_url = 'https://www.gunszop.pl/amunicja-kulowa-i-srutowa-c-1_48.html'
 
 
@@ -2226,6 +2227,78 @@ def scrap_gunszop() -> [dict]:
 
     return scrape_all_products()
 
+def scrap_luska\
+                () -> list[dict]:
+    base_url = 'https://luska.pl/category/amunicja'
+
+
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        try:
+            return max([int(x.get_text(strip=True)) for x in soup.find("ul",class_="pagination").find_all("li") if x.get_text(strip=True).isdigit()])
+
+        except:
+            return 1
+
+
+
+
+    def scrape_all_products():
+        products_data = []
+
+        for page in range(get_total_pages()):
+
+            url = f'{base_url}/{page}'
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            container = soup.find(id="full-list")
+            product_containers = container.find_all('div',class_="product")
+            for product in product_containers:
+
+                title = product.find('p',class_="name").get_text(strip=True)
+                try:
+                    price = product.find('div', class_='main_price').get_text(strip=True)
+
+                except:
+                    price=''
+
+                availibility =  "Brak" not in product.find("div",class_="product-availability").get_text()
+
+
+
+                price = re.search(r"\d+,\d+",price).group(0)
+                link = f"{base_url}{product.find('a')['href']}"
+                title, size = extract_data_from_title(title)
+
+
+
+
+                products_data.append({
+                    "Miasto": "Śrem",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Łuska'
+                })
+
+
+
+        return products_data
+
+    return scrape_all_products()
+
 
 
 STORES_SCRAPPERS = {
@@ -2256,6 +2329,6 @@ STORES_SCRAPPERS = {
     "Edex":scrap_edex, #Jasło
     "GoldGuns":scrap_goldguns, #Poznań
     "Gun Monkey":scrap_gunmonkey, #Jaworzno,
-    "Gunszop":scrap_gunszop #Bełchatów/Częstochowa
+    "Gunszop":scrap_gunszop, #Bełchatów/Częstochowa
+    "Łuska":scrap_luska #Śrem
 }
-

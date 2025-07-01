@@ -16,13 +16,13 @@ st.set_page_config(layout="wide")
 
 
 cities_per_region = {"Mazowieckie":["Warszawa","Płock","Pruszków","Siedlce","Ostrołęka","Ciechanów","Siedlce"],
-                     "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice","Aleksandrów Łódzki"],
-                     "Wielkopolskie": ["Poznań"],
+                     "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice","Aleksandrów Łódzki","Bełchatów"],
+                     "Wielkopolskie": ["Poznań","Śrem"],
                      "Dolnośląskie":["Wrocław","Mirków"],
                      "Małopolskie":["Kraków"],
                      "Lubelskie":["Lublin"],
                      "Podkarpackie":["Jasło"],
-                     "Śląskie":"Jaworzno"}
+                     "Śląskie":["Jaworzno","Częstochowa"]}
 
 # if "loaded_stores" not in st.session_state.keys():
 #     all_pulled_stores = list(Scrapper.STORES_SCRAPPERS.keys())
