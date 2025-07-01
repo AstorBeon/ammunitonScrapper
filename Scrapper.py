@@ -2098,7 +2098,7 @@ def scrap_gunmonkey() -> [dict]:
 
             url = f'{base_url}/{page}'
             response = requests.get(url, headers=headers)
-            page+=1
+
             if response.status_code != 200:
                 break
 
@@ -2145,6 +2145,87 @@ def scrap_gunmonkey() -> [dict]:
 
     return scrape_all_products()
 
+def scrap_gunszop() -> [dict]:
+    base_url = 'https://www.gunszop.pl/amunicja-kulowa-i-srutowa-c-1_48.html'
+
+
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        try:
+            return max([int(x.get_text(strip=True)) for x in soup.find("div",class_="IndexStron").find_all("a") if x.get_text(strip=True).isdigit()])
+
+        except:
+            return 1
+
+
+
+
+    def scrape_all_products():
+        products_data = []
+
+        for page in range(get_total_pages()):
+
+            url = f'{base_url}/s={page}'
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('div',class_="Okno")
+            for product in product_containers:
+
+                title = product.find('h3').get_text(strip=True)
+                try:
+                    price = product.find('span', class_='CenaAktualna').get_text(strip=True)
+
+                except:
+                    price=''
+                try:
+                    availibility =  product.find("ul",class_="ListaOpisowa").find_all("li")[1].get_text()
+                except Exception:
+                    availibility=product.find("ul", class_="ListaOpisowa").find_all("li")[0].get_text()
+                if "Wycofany" in availibility:
+                    continue
+
+                availibility = "niedostępny" not in availibility
+                price = re.search(r"\d+,\d+",price).group(0)
+                link = product.find("a",class_="Zoom")['href']
+                title, size = extract_data_from_title(title)
+
+
+
+
+                products_data.append({
+                    "Miasto": "Bełchatów",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Gunszop'
+                })
+
+                products_data.append({
+                    "Miasto": "Częstochowa",
+                    "Tytuł": title,
+                    "Cena": price,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Gunszop'
+                })
+
+        return products_data
+
+    return scrape_all_products()
+
 
 
 STORES_SCRAPPERS = {
@@ -2174,8 +2255,7 @@ STORES_SCRAPPERS = {
     "E-militaria":scrap_emilitaria, #Mirków
     "Edex":scrap_edex, #Jasło
     "GoldGuns":scrap_goldguns, #Poznań
-    "Gun Monkey":scrap_gunmonkey #Jaworzno
+    "Gun Monkey":scrap_gunmonkey, #Jaworzno,
+    "Gunszop":scrap_gunszop #Bełchatów/Częstochowa
 }
 
-for s in scrap_salonbroni():
-    print(s)
