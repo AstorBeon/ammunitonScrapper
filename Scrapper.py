@@ -164,7 +164,7 @@ def scrap_top_gun() -> [dict]:
 
         return products_data
     return scrape_all_products()
-    
+
 
 def scrap_strefa_celu() -> [dict]:
 
@@ -196,11 +196,11 @@ def scrap_strefa_celu() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        
-        
+
+
         for page in range(1, total_pages + 1):
             url = f'{base_url}?p={page}'
-            
+
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -234,7 +234,7 @@ def scrap_strefa_celu() -> [dict]:
 
         return products_data
 
-    
+
     product_list = scrape_all_products()
     return product_list
 
@@ -267,11 +267,11 @@ def scrap_garand() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        
+
 
         for page in range(1, total_pages + 1):
             url = f'{base_url}/{page}?p={page}'
-            
+
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -309,7 +309,7 @@ def scrap_garand() -> [dict]:
 
         return products_data
 
-    
+
     product_list = scrape_all_products()
     return product_list
 
@@ -348,7 +348,7 @@ def scrap_jmbron() -> [dict]:
                 url = base_url
             else:
                 url = f'{base_url}page/{page}/'
-            
+
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -407,13 +407,13 @@ def scrap_magazynuzbrojenia() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        
+
         for page in range(1, total_pages + 1):
             if page == 1:
                 url = base_url
             else:
                 url = f'https://sklep.magazynuzbrojenia.pl/pl/c/Amunicja/{page}'
-            
+
             response = requests.get(url, headers=headers,verify=False)
 
             if response.status_code != 200:
@@ -511,7 +511,7 @@ def scrap_kaliber() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_salonbroni() -> [dict]:
@@ -558,7 +558,7 @@ def scrap_salonbroni() -> [dict]:
 
     for i in range(1, pages+1):
         products.extend(scrape_products(i))
-    
+
     return products
 
 def scrap_bestgun() -> [dict]:
@@ -640,7 +640,7 @@ def scrap_mex_armory() -> [dict]:
         except Exception as e:
             print(e)
             return 1
-        
+
         return pagination
 
     def scrape_all_products():
@@ -648,7 +648,7 @@ def scrap_mex_armory() -> [dict]:
         total_pages = get_total_pages()
 
         for page in range(1, total_pages + 1):
-            if page == 1:   
+            if page == 1:
                 url = base_url
             else:
                 url = f'{base_url}/page/{page}'
@@ -753,7 +753,7 @@ def scrap_gun_eagle_rusznikarnia() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_top_shot() -> [dict]:
@@ -827,7 +827,7 @@ def scrap_top_shot() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_kwatermistrz() -> [dict]:
@@ -902,7 +902,7 @@ def scrap_kwatermistrz() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_c4guns() -> [dict]:
@@ -982,7 +982,7 @@ def scrap_c4guns() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_puchacz() -> [dict]:
@@ -1066,7 +1066,7 @@ def scrap_puchacz() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_rparms() -> [dict]:
@@ -1172,7 +1172,7 @@ def scrap_rparms() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_astorclassic() -> [dict]:
@@ -1212,7 +1212,7 @@ def scrap_astorclassic() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        
+
 
         for page in range(1, total_pages + 1):
             if page == 1:
@@ -1279,7 +1279,7 @@ def scrap_astorclassic() -> [dict]:
 
         return products_data
 
-    
+
 
     return scrape_all_products()
 
@@ -1361,7 +1361,7 @@ def scrap_gunsmasters() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_knieja() -> [dict]:
@@ -1442,7 +1442,7 @@ def scrap_knieja() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_atenagun() -> [dict]:
@@ -1513,7 +1513,7 @@ def scrap_atenagun() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_snajper() -> [dict]:
@@ -1658,7 +1658,7 @@ def scrap_coltwroclaw() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_vismag() -> [dict]:
@@ -1732,7 +1732,7 @@ def scrap_vismag() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_bazooka() -> [dict]:
@@ -1787,7 +1787,7 @@ def scrap_bazooka() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_cyngiel() -> [dict]:
@@ -1845,7 +1845,7 @@ def scrap_cyngiel() -> [dict]:
 
         return products_data
 
-    
+
     return scrape_all_products()
 
 def scrap_emilitaria() -> [dict]:
@@ -2136,8 +2136,6 @@ def scrap_gunmonkey() -> [dict]:
 
     return scrape_all_products()
 
-
-
 def scrap_proce_i_pestki() -> [dict]:
     base_url = 'https://proceipestki.pl/kategoria-produktu/amunicja/'
 
@@ -2151,7 +2149,7 @@ def scrap_proce_i_pestki() -> [dict]:
         soup = BeautifulSoup(response.text, 'html.parser')
 
         try:
-            return max([int(x.get_text(strip=True) for x in soup.find("div",class_="ep-pagination").find_all("li") if x.get_text(strip=True).isdigit())])
+            return max([int(x.get_text(strip=True)) for x in soup.find("div",class_="ep-pagination").find_all("li") if x.get_text(strip=True).isdigit()])
 
         except:
             return 1
@@ -2171,7 +2169,7 @@ def scrap_proce_i_pestki() -> [dict]:
                 break
 
             soup = BeautifulSoup(response.text, 'html.parser')
-            product_containers = soup.find_all('div',class_="bdt-wc-product-inner")
+            product_containers = soup.find_all('div',class_="bdt-wc-product-desc")
             for product in product_containers:
 
                 title_tag = product.find('h2')
@@ -2181,26 +2179,18 @@ def scrap_proce_i_pestki() -> [dict]:
                 except:
                     price=''
 
-
-                #Additional call for availability
-                sublink = product.find("a")["href"]
-
-                subdata = requests.get(sublink, headers=headers)
-                subsoup = BeautifulSoup(subdata.text, 'html.parser')
-
                 try:
-
+                    subresponse = requests.get(product.find('a')['href'])
+                    subsoup =BeautifulSoup(subresponse.text, 'html.parser')
                     availibility = subsoup.find("p",class_="stock").get_text(strip=True) == "Na stanie"
-                except Exception as e:
-
+                except:
                     availibility=False
-
 
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
 
 
                 price = price.replace("zł","")
-                link = f"{product.find('a')['href']}"
+                link = product.find('a')['href']
                 title, size = extract_data_from_title(title)
                 products_data.append({
                     "Miasto": "Łódź",
@@ -2215,6 +2205,7 @@ def scrap_proce_i_pestki() -> [dict]:
         return products_data
 
     return scrape_all_products()
+
 
 
 STORES_SCRAPPERS = {
@@ -2245,6 +2236,6 @@ STORES_SCRAPPERS = {
     "Edex":scrap_edex, #Jasło
     "GoldGuns":scrap_goldguns, #Poznań
     "Gun Monkey":scrap_gunmonkey, #Jaworzno
-    "Proce i Pestki":scrap_proce_i_pestki #Łódź
+    "Proce i Pestki":scrap_proce_i_pestki, #Łódź
 }
 

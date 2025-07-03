@@ -16,13 +16,14 @@ st.set_page_config(layout="wide")
 
 
 cities_per_region = {"Mazowieckie":["Warszawa","Płock","Pruszków","Siedlce","Ostrołęka","Ciechanów","Siedlce"],
-                     "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice","Aleksandrów Łódzki"],
-                     "Wielkopolskie": ["Poznań"],
+                     "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice","Aleksandrów Łódzki","Bełchatów"],
+                     "Wielkopolskie": ["Poznań","Śrem"],
                      "Dolnośląskie":["Wrocław","Mirków"],
                      "Małopolskie":["Kraków"],
                      "Lubelskie":["Lublin"],
                      "Podkarpackie":["Jasło"],
-                     "Śląskie":"Jaworzno"}
+                     "Śląskie":["Jaworzno","Częstochowa"],
+                     "Zachodniopomorskie":["Kołobrzeg"]}
 
 # if "loaded_stores" not in st.session_state.keys():
 #     all_pulled_stores = list(Scrapper.STORES_SCRAPPERS.keys())
@@ -52,7 +53,7 @@ def normalize_data(df:list):
 
     total_df = Scrapper.map_prices(total_df)
 
-    exclude_regex = r"[Pp]ude[lł]ko"
+    exclude_regex = r"([Pp]ude[lł]ko)|(SZKOLENIE)"
 
     total_df = total_df[~total_df['Tytuł'].str.contains(exclude_regex, regex=True)]
 
@@ -110,21 +111,19 @@ def scrap_complete_data(list_of_stores:list=None):
         try:
 
             res = Scrapper.STORES_SCRAPPERS[store_name_arg]()
-            complete_data.extend(res)
+            try:
+                complete_data.extend(res)
+            except Exception as e:
+                print(e)
+                print(f"Failure for: {store_name_arg}")
             #st.session_state["pulled_data"][store_name_arg] = res
             if not res:
-            #     print(f"EMPTY STORE: {store_name_arg}")
-                msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data ({time_format(start_time)}s)")
-            #     #st.session_state["loaded_stores"][store_name_arg] = "ERROR"
+                st.toast(f"ERROR - Failed to scrap {store_name_arg}")
 
                 tmp_store_states[store_name_arg]= "ERROR"
             else:
-                msg = st.toast(f"OK - Successfully scrapped {store_name_arg} data({time_format(start_time)}s)")
-            #     #st.session_state["loaded_stores"][store_name_arg] = "OK"
+                st.toast(f"OK - Successfully scrapped {store_name_arg}")
 
-                #print(res[0])
-                # if store_name_arg=="Astroclassic":
-                #     print(res)
                 tmp_store_states[store_name_arg]= f"OK ({round(time.time()-start_time,2)}s)"
 
         except Exception as e:
