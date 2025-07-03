@@ -2138,6 +2138,85 @@ def scrap_gunmonkey() -> [dict]:
 
 
 
+def scrap_proce_i_pestki() -> [dict]:
+    base_url = 'https://proceipestki.pl/kategoria-produktu/amunicja/'
+
+
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        try:
+            return max([int(x.get_text(strip=True) for x in soup.find("div",class_="ep-pagination").find_all("li") if x.get_text(strip=True).isdigit())])
+
+        except:
+            return 1
+
+
+
+
+    def scrape_all_products():
+        products_data = []
+
+        for page in range(get_total_pages()):
+
+            url = f'{base_url}/page/{page}'
+            response = requests.get(url, headers=headers)
+            page+=1
+            if response.status_code != 200:
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('div',class_="bdt-wc-product-inner")
+            for product in product_containers:
+
+                title_tag = product.find('h2')
+                try:
+                    price = product.find('div', class_='bdt-wc-product-price').get_text(strip=True)
+
+                except:
+                    price=''
+
+
+                #Additional call for availability
+                sublink = product.find("a")["href"]
+
+                subdata = requests.get(sublink, headers=headers)
+                subsoup = BeautifulSoup(subdata.text, 'html.parser')
+
+                try:
+
+                    availibility = subsoup.find("p",class_="stock").get_text(strip=True) == "Na stanie"
+                except Exception as e:
+
+                    availibility=False
+
+
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+
+
+                price = price.replace("zł","")
+                link = f"{product.find('a')['href']}"
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "Miasto": "Łódź",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Proce i Pestki'
+                })
+
+        return products_data
+
+    return scrape_all_products()
+
+
 STORES_SCRAPPERS = {
     "Garand":scrap_garand, #Warszawa
     "Top gun":scrap_top_gun, #Warszawa
@@ -2165,6 +2244,7 @@ STORES_SCRAPPERS = {
     "E-militaria":scrap_emilitaria, #Mirków
     "Edex":scrap_edex, #Jasło
     "GoldGuns":scrap_goldguns, #Poznań
-    "Gun Monkey":scrap_gunmonkey #Jaworzno
+    "Gun Monkey":scrap_gunmonkey, #Jaworzno
+    "Proce i Pestki":scrap_proce_i_pestki #Łódź
 }
 
