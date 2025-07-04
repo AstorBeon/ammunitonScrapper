@@ -2022,7 +2022,6 @@ def scrap_goldguns() -> [dict]:
 
             url = f'{base_url}/{page}'
             response = requests.get(url, headers=headers)
-            page+=1
             if response.status_code != 200:
                 break
 
@@ -2089,7 +2088,6 @@ def scrap_gunmonkey() -> [dict]:
 
             url = f'{base_url}/{page}'
             response = requests.get(url, headers=headers)
-            page+=1
             if response.status_code != 200:
                 break
 
@@ -2164,7 +2162,6 @@ def scrap_proce_i_pestki() -> [dict]:
 
             url = f'{base_url}/page/{page}'
             response = requests.get(url, headers=headers)
-            page+=1
             if response.status_code != 200:
                 break
 
@@ -2207,6 +2204,80 @@ def scrap_proce_i_pestki() -> [dict]:
     return scrape_all_products()
 
 
+def scrap_siwiaszczyk() -> [dict]:
+    base_url = 'https://siwiaszczyk.pl/amunicja-do-broni'
+
+
+    # def get_total_pages():
+    #     response = requests.get(base_url, headers=headers)
+    #     if response.status_code != 200:
+    #         print(f"Failed to load the page: {response.status_code}")
+    #         return 1
+    #
+    #     soup = BeautifulSoup(response.text, 'html.parser')
+    #
+    #     try:
+    #         return max([int(x.get_text(strip=True)) for x in soup.find("div",class_="ep-pagination").find_all("li") if x.get_text(strip=True).isdigit()])
+    #
+    #     except:
+    #         return 1
+
+
+
+
+    def scrape_all_products():
+        products_data = []
+        page=1 #Aż do 41!!!
+        while True:
+
+            url = f'{base_url}/{page}'
+            page+=1
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                break
+
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('product-tile')
+            for product in product_containers:
+
+                title = product["name"]
+                try:
+                    price = product["price"]
+
+                except:
+                    price=''
+                link = f"{base_url}{product.find('a')['href']}"
+                try:
+                    subresponse = requests.get(link)
+                    subsoup =BeautifulSoup(subresponse.text, 'html.parser')
+                    availibility = "Dostępny" in subsoup.find("strong",class_="product-availability__description_unavailable").get_text(strip=True)
+                except:
+                    availibility=False
+
+
+
+
+
+                title, size = extract_data_from_title(title)
+                products_data.append({
+                    "Miasto": "Łódź",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Siwiaszczyk'
+                })
+            print(page)
+            if len(product_containers)!= 15:
+                break
+
+        return products_data
+
+    return scrape_all_products()
+
 
 STORES_SCRAPPERS = {
     "Garand":scrap_garand, #Warszawa
@@ -2237,5 +2308,8 @@ STORES_SCRAPPERS = {
     "GoldGuns":scrap_goldguns, #Poznań
     "Gun Monkey":scrap_gunmonkey, #Jaworzno
     "Proce i Pestki":scrap_proce_i_pestki, #Łódź
+    "Siwiaszczyk": scrap_siwiaszczyk #Łódź
 }
 
+for c in scrap_siwiaszczyk():
+    print(c)
