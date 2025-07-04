@@ -2311,5 +2311,3 @@ STORES_SCRAPPERS = {
     "Siwiaszczyk": scrap_siwiaszczyk #Łódź
 }
 
-for c in scrap_siwiaszczyk():
-    print(c)

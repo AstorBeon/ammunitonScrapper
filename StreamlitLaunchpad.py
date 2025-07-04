@@ -189,6 +189,10 @@ def try_to_retrieve_data():
         st.session_state["complete_df"] = data
         st.session_state["filtered_df"] = data
         st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx"))
+        st.session_state["date_of_last_codechange"] = max(
+            [time.ctime(os.path.getmtime("StreamlitLaunchpad.py")),
+             time.ctime(os.path.getmtime("Scrapper.py"))])
+
         # with open("last_mod","r") as file:
         #     st.session_state['date_of_last_pull'] = file.read()
 
@@ -459,5 +463,5 @@ if "download_order" in st.session_state.keys() and st.session_state["download_or
 st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")
 
 if "was_informed_about_wip" not in st.session_state:
-    basic_info_prompt("Praca wre! Strona wciąż jest w budowie, mogą zdarzać się błędy")
+    basic_info_prompt(f'Praca wre! Strona wciąż jest w budowie, mogą zdarzać się błędy. Ostatnia aktualizacja kodu: {st.session_state["date_of_last_codechange"]}')
     st.session_state["was_informed_about_wip"]=True
