@@ -58,6 +58,8 @@ def map_single_size(size:str):
     return size
 
 def trim_price(price_text:str) -> str:
+    if type(price_text) != str:
+        price_text = str(price_text)
     return re.sub(r"[^0-9,\\.]","",price_text).replace(",",".")
 
 
@@ -80,6 +82,7 @@ def map_sizes(data:pd.DataFrame) -> pd.DataFrame:
     return data
 
 def map_prices(data:pd.DataFrame) -> pd.DataFrame:
+    data.to_excel("tmp.xlsx")
     data["Cena"] = data["Cena"].apply(trim_price)
     return data
 
@@ -2235,16 +2238,20 @@ def scrap_siwiaszczyk() -> [dict]:
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
+                print(f"Fail code: {response.status_code}")
                 break
+
+
 
 
             soup = BeautifulSoup(response.text, 'html.parser')
             product_containers = soup.find_all('product-tile')
+            print(f"{page} - {len(product_containers)}")
             for product in product_containers:
 
                 title = product["name"]
                 try:
-                    price = product["price"]
+                    price = str(product["price"])
 
                 except:
                     price=''
@@ -2270,9 +2277,11 @@ def scrap_siwiaszczyk() -> [dict]:
                     "Dostępny": availibility,
                     "Sklep": 'Siwiaszczyk'
                 })
-            print(page)
-            if len(product_containers)!= 15:
+
+            if len(product_containers)<10:
+                print(f"Final call: {len(product_containers)}")
                 break
+
 
         return products_data
 
@@ -2310,4 +2319,5 @@ STORES_SCRAPPERS = {
     "Proce i Pestki":scrap_proce_i_pestki, #Łódź
     "Siwiaszczyk": scrap_siwiaszczyk #Łódź
 }
-
+for s in scrap_proce_i_pestki():
+    print(s)
