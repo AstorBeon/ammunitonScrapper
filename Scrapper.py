@@ -2288,6 +2288,74 @@ def scrap_siwiaszczyk() -> [dict]:
     return scrape_all_products()
 
 
+def scrap_trop() -> [dict]:
+    base_url = 'https://sklep-mysliwski.com/5-amunicja'
+
+
+    def get_total_pages():
+        response = requests.get(base_url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to load the page: {response.status_code}")
+            return 1
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        try:
+            return max([int(x.get_text(strip=True)) for x in soup.find("ul",class_="pagination").find_all("li") if x.get_text(strip=True).isdigit()])
+
+        except:
+            return 1
+
+
+
+
+    def scrape_all_products():
+        products_data = []
+
+        for page in range(get_total_pages()):
+
+            url = f'{base_url}/{page}'
+            response = requests.get(url, headers=headers)
+            if response.status_code != 200:
+                break
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_containers = soup.find_all('article',class_="product-miniature")
+            for product in product_containers:
+
+                title_tag = product.find('h3')
+                try:
+                    price = product.find_all('span', class_='price')[-1].get_text(strip=True)
+
+                except:
+                    price=''
+
+                availibility =  "niedostępny" not in product.find("p").get_text(strip=True)
+
+
+                title = title_tag.get_text(strip=True) if title_tag else "No title"
+
+
+                price = re.search(r"\d+,\d+",price).group(0)
+                link = f"{product.find_all('a')[-1]['href']}"
+                title, size = extract_data_from_title(title)
+
+                products_data.append({
+                    "Miasto": "Poznań",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": link,
+                    "Kaliber": size,
+                    "Dostępny": availibility,
+                    "Sklep": 'Trop'
+                })
+
+        return products_data
+
+    return scrape_all_products()
+
+
+
 STORES_SCRAPPERS = {
     "Garand":scrap_garand, #Warszawa
     "Top gun":scrap_top_gun, #Warszawa
@@ -2317,7 +2385,7 @@ STORES_SCRAPPERS = {
     "GoldGuns":scrap_goldguns, #Poznań
     "Gun Monkey":scrap_gunmonkey, #Jaworzno
     "Proce i Pestki":scrap_proce_i_pestki, #Łódź
-    "Siwiaszczyk": scrap_siwiaszczyk #Łódź
+    "Siwiaszczyk": scrap_siwiaszczyk, #Łódź
+    "Trop":scrap_trop #Wrocław
 }
-for s in scrap_proce_i_pestki():
-    print(s)
+
