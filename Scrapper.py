@@ -1739,7 +1739,7 @@ def scrap_vismag() -> [dict]:
     return scrape_all_products()
 
 def scrap_bazooka() -> [dict]:
-    base_url = "https://bazooka.waw.pl/amunicja-2"
+    base_url = "https://bazooka.waw.pl/?amunicja"
 
     def scrape_all_products():
         products_data = []
@@ -1748,7 +1748,7 @@ def scrap_bazooka() -> [dict]:
         response = requests.get(base_url, headers=headers)
 
         if response.status_code != 200:
-
+            print(response.status_code)
             return
 
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -1792,6 +1792,63 @@ def scrap_bazooka() -> [dict]:
 
 
     return scrape_all_products()
+
+def scrap_bazooka_updated() -> [dict]:
+    base_url = "https://bazooka.waw.pl/?amunicja"
+
+    def scrape_all_products():
+        products_data = []
+
+
+        response = requests.get(base_url, headers=headers)
+
+        if response.status_code != 200:
+            print(response.status_code)
+            return
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        #h2 rozmiar
+        #UL - oferty
+            #LI - poszczególne produkty
+
+        sizes = soup.find_all("strong")[4:]
+        uls = soup.find_all("ul")
+
+
+        for size,ul in zip(sizes,uls):
+            size = size.get_text(strip=True) if "Pozostałe" not in size.get_text(strip=True) else None
+
+            for li in ul.find_all("li"):
+
+                line = li.get_text(strip=True) #strong 0 cena
+                price = re.sub(r"([^0-9,\\.])","",li.get_text(strip=True))[:-1]
+                title = line.replace(price,"")
+                if size is None:
+                    title, size = extract_data_from_title(title)
+
+                if "(brak)" in title:
+                    title = title.replace("(brak)","")
+                    price = None
+                    availibility = False
+
+
+                products_data.append({
+                    "Miasto": "Pruszków",
+                    "Tytuł": title,
+                    "Cena": price ,
+                    "Link": f"https://www.bazooka.sklep.pl/search?q={title.replace(' ','+').replace('\\xa','')}",
+                    "Kaliber": size,
+                    "Dostępny": True,
+                    "Sklep": 'Bazooka'
+                })
+
+
+        return products_data
+
+
+    return scrape_all_products()
+
 
 def scrap_cyngiel() -> [dict]:
     base_url = 'https://cyngiel.com.pl/sklep-z-bronia/amunicja-do-broni-palnej/?products-per-page=all'
@@ -2246,7 +2303,7 @@ def scrap_siwiaszczyk() -> [dict]:
 
             soup = BeautifulSoup(response.text, 'html.parser')
             product_containers = soup.find_all('product-tile')
-            print(f"{page} - {len(product_containers)}")
+
             for product in product_containers:
 
                 title = product["name"]
@@ -2366,7 +2423,7 @@ STORES_SCRAPPERS = {
     "Salon broni":scrap_salonbroni, #Warszawa
     "Best gun":scrap_bestgun, #Ciechanów
     "Mex armory": scrap_mex_armory, #Warszawa
-    "Bazooka" : scrap_bazooka,
+    "Bazooka" : scrap_bazooka_updated,
     "Gun eagle rusznikarnia": scrap_gun_eagle_rusznikarnia, #Ostrołęka
     "Top shot": scrap_top_shot, #Łódź
     "Kwatermistrz":scrap_kwatermistrz, #Łódź
