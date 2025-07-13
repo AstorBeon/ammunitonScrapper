@@ -232,7 +232,7 @@ def scrap_strefa_celu() -> [dict]:
                     "Sklep":"Strefa Celu",
                     "Cena": price,
                     "Dostępny":available.get_text(strip=True)=="Dostępny" if available else False,
-                    'link': link
+                    'Link': link
                 })
 
         return products_data
@@ -306,7 +306,7 @@ def scrap_garand() -> [dict]:
                     "Sklep":"Garand",
                     "Cena": price,
                     "Dostępny": available,
-                    'link': link
+                    'Link': link
                 })
                 #print(products_data[-1])
 
@@ -376,7 +376,7 @@ def scrap_jmbron() -> [dict]:
                     "Miasto": "Warszawa",
                     "Tytuł": title,
                     "Cena": price,
-                    'link': link,
+                    'Link': link,
                     "Kaliber":size,
                     "Dostępny": availability,
                     "Sklep": "JM Bron"
@@ -441,7 +441,7 @@ def scrap_magazynuzbrojenia() -> [dict]:
                     "Tytuł": title,
                     "Cena": price,
                     "Kaliber":size,
-                    'link': link,
+                    'Link': link,
                     "Dostępny": availability,
                     "Sklep":"Magazyn uzbrojenia"
                 })
@@ -506,7 +506,7 @@ def scrap_kaliber() -> [dict]:
                     "Miasto": "Warszawa",
                     "Tytuł": title,
                     "Cena": "",
-                    'link': link,
+                    'Link': link,
                     "Kaliber":size,
                     "Dostępny": availability,
                     "Sklep":'Kaliber'
@@ -549,7 +549,7 @@ def scrap_salonbroni() -> [dict]:
                 "Tytuł": title,
                 "Cena": price,
                 "Kaliber":size,
-                'link': link,
+                'Link': link,
                 "Dostępny": availability,
                 "Sklep":"Salon broni"
             })
