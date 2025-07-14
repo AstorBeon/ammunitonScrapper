@@ -1,6 +1,7 @@
 #Main class to manage rest of the code
 import concurrent
 import locale
+import logging
 import os
 import re
 import time
@@ -13,7 +14,7 @@ import Scrapper
 st.set_page_config(layout="wide")
 
 #locale.setlocale(locale.LC_TIME, 'pl_PL.UTF-8')
-
+logging.getLogger('streamlit.runtime.scriptrunner').setLevel(logging.ERROR)
 
 cities_per_region = {"Mazowieckie":["Warszawa","Płock","Pruszków","Siedlce","Ostrołęka","Ciechanów","Siedlce"],
                      "Łódzkie":["Łódź","Piotrków Trybunalski","Pabianice","Aleksandrów Łódzki","Bełchatów"],
@@ -55,7 +56,7 @@ def normalize_data(df:list):
 
     exclude_regex = r"([Pp]ude[lł]ko)|(SZKOLENIE)"
 
-    total_df = total_df[~total_df['Tytuł'].str.contains(exclude_regex, regex=True)]
+    total_df = total_df[~total_df['Tytuł'].str.contains(exclude_regex,regex=True)]
 
 
     total_df.columns = ["Miasto","Tytuł","Cena","Link","Kaliber","Dostępny","Sklep"]
@@ -127,7 +128,7 @@ def scrap_complete_data(list_of_stores:list=None):
                 tmp_store_states[store_name_arg]= f"OK ({round(time.time()-start_time,2)}s)"
 
         except Exception as e:
-            print(e)
+
             print(traceback.print_exc())
             if "loaded_stores" not in st.session_state.keys():
                 st.session_state["loaded_stores"] = {}
@@ -275,67 +276,12 @@ COMPLETE_DATA=pd.DataFrame()
 LOADED_STORES = []
 DATA_PULL_TOTAL_TIME=0
 
-# try:
-#     st.subheader("Obecnie dostępne sklepy :)")
-#     total_amount_of_stores = len(st.session_state["loaded_stores"])
-#     cols = st.columns(8)
-#     count=0
-#
-#     stores = list(st.session_state["loaded_stores"].items())
-#     stores.sort(key=lambda x:x[0].lower())
-#     for store,status in stores:
-#         if count==8:
-#             count=0
-#             cols=st.columns(8)
-#         with cols[count]:
-#             if status=="OK":
-#                 st.success(store)
-#             else:
-#                 st.error(store)
-#             #st.text(f"{store} - {status}")
-#             count+=1
-#
-# except Exception as e:
-#     print(e)
-
 st.markdown("\n")
 
-
-#Part responsible for selection of singular stores - disabled for now
-# s_cols = st.columns(len(Scrapper.STORES_SCRAPPERS)+1)
-# if "stores_checkboxes" not in st.session_state.keys():
-#     st.session_state["stores_checkboxes"]={store:True for store in Scrapper.STORES_SCRAPPERS.keys()}
-# choosen_stores = {}
-# checkboxes = []
-# for key,val in Scrapper.STORES_SCRAPPERS.items():
-#     with s_cols[len(checkboxes)]:
-#         x = st.checkbox(key,value=st.session_state["stores_checkboxes"][key])
-#
-#         checkboxes.append(x)
-#
-#
-# def select_all():
-#     if all(st.session_state["stores_checkboxes"].values()):
-#         st.session_state["stores_checkboxes"] = {store:False for store in Scrapper.STORES_SCRAPPERS.keys()}
-#
-#     else:
-#         for k,v in st.session_state["stores_checkboxes"].items():
-#             st.session_state["stores_checkboxes"][k]=True
-#
-# with s_cols[-1]:
-#     st.button("Select all",on_click=select_all)
-# st.markdown("\n")
 st.markdown("\n")
-#if "passok" in st.session_state.keys() and st.session_state["passok"]:
 
 st.write(f"Ostatnie odświeżenie danych: {'Brak' if 'date_of_last_pull' not in st.session_state.keys() else 
 st.session_state['date_of_last_pull']}")
-#st.button("Refresh current data", on_click=scrap_complete_data,args=[checkboxes],use_container_width=True)
-
-
-# else:
-#     ask_for_password()
-
 
 st.markdown("\n")
 st.markdown("\n")
@@ -357,10 +303,6 @@ with col1:
 
     pref_name = st.text_input("Podaj pełną/częściową nazwę",placeholder="")
 
-    # if pref_name:
-    #     st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["title"].str.contains(pref_name, na=False)]
-    #     #print(f"New length : {len(st.session_state['filtered_df'])}")
-    #
     pref_stores = st.multiselect("Wybrane sklepy",sorted(list(Scrapper.STORES_SCRAPPERS.keys())),placeholder="")
 
 
@@ -449,16 +391,17 @@ try:
 except Exception as e:
     print(e)
 
-
+#For admin access (refresh prompt)
 if "admin" in st._get_query_params().keys():
     st.button("Odśwież dane", on_click=ask_for_password,args=[],use_container_width=True,help= "Naciśnij aby przeładować dane (powinno zająć do czterech minut)" )
 
+#If admin is verified and password confirmed - refresh data
 if "download_order" in st.session_state.keys() and st.session_state["download_order"]:
     scrap_complete_data()
     st.session_state["download_order"]= False
     basic_info_prompt(f"Dane odświeżone! Ilość pobranych ofert: {len(st.session_state['complete_df'])}" )
+    st.rerun()
 
-#Scrapper.map_prices_by_box_size(st.session_state["complete_df"])
 
 st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na astorbeon@protonmail.com!")
 

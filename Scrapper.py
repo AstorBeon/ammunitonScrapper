@@ -1751,8 +1751,7 @@ def scrap_bazooka() -> [dict]:
             print(response.status_code)
             return
 
-        soup = BeautifulSoup(response.text, 'html.parser')
-        product_containers = soup.find_all("li",class_="ajax_block_product")
+        soup = BeautifulSoup(response.text, 'html.parser').find(id="page")
 
         #h2 rozmiar
         #UL - oferty
@@ -1774,7 +1773,9 @@ def scrap_bazooka() -> [dict]:
                 if "(brak)" in title:
                     title = title.replace("(brak)","")
                     price = None
-                    availibility = False
+
+
+                price = re.findall(r"[0-9,]+zł",title)[0][:-2]
 
 
                 products_data.append({
@@ -2445,4 +2446,3 @@ STORES_SCRAPPERS = {
     "Siwiaszczyk": scrap_siwiaszczyk, #Łódź
     "Trop":scrap_trop #Wrocław
 }
-
