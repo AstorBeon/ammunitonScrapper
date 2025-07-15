@@ -1751,7 +1751,7 @@ def scrap_bazooka() -> [dict]:
             print(response.status_code)
             return
 
-        soup = BeautifulSoup(response.text, 'html.parser').find(id="page")
+        soup = BeautifulSoup(response.text, 'html.parser')
 
         #h2 rozmiar
         #UL - oferty
@@ -1807,7 +1807,7 @@ def scrap_bazooka_updated() -> [dict]:
             print(response.status_code)
             return
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, 'html.parser').find(id="page")
 
         #h2 rozmiar
         #UL - oferty
@@ -2446,3 +2446,4 @@ STORES_SCRAPPERS = {
     "Siwiaszczyk": scrap_siwiaszczyk, #Łódź
     "Trop":scrap_trop #Wrocław
 }
+
