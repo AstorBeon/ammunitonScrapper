@@ -1823,7 +1823,8 @@ def scrap_bazooka_updated() -> [dict]:
             for li in ul.find_all("li"):
 
                 line = li.get_text(strip=True) #strong 0 cena
-                price = re.sub(r"([^0-9,\\.])","",li.get_text(strip=True))[:-1]
+                price = re.search(r"\([0-9,]+",line).group(0)#.strip().replace("/szt","")
+                price = re.sub(r"([^0-9,\\.])","",price)
                 title = line.replace(price,"")
                 if size is None:
                     title, size = extract_data_from_title(title)
@@ -1831,9 +1832,15 @@ def scrap_bazooka_updated() -> [dict]:
                 if "(brak)" in title:
                     title = title.replace("(brak)","")
                     price = None
-                    availibility = False
 
+                #Special handling for price per pack
+                if "zł/op" in title and price is not None and "/szt" not in title:
 
+                    per_pack = int(re.sub(r"[^0-9]","",re.findall(r"op\. ?\d+",title)[0]))
+                    price = float(price)/per_pack
+                    price = str(price).replace(".",",")
+
+                title = title.replace("/szt","").replace("(zł.)","").replace("zł. ","")
                 products_data.append({
                     "Miasto": "Pruszków",
                     "Tytuł": title,
