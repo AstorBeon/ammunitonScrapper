@@ -11,10 +11,6 @@ DONE-Jasno oznaczyć brak ceny (nie -1)
 DONE-Spróbować uzyskać ceny, nawet jak nie są dostępne na głównej stronie
 DONE-Pogrupować kalibry
 
-Sklepy do dodania:
-Siwiaszczyk
-Trop
 
-Change licence
-
--wyświetlanie tel. do sklepu po naciśnięciu oferty
+-to trim better titles
+-to add map with stores marked on it
