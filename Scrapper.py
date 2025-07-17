@@ -670,7 +670,7 @@ def scrap_mex_armory() -> [dict]:
                 link_tag = product.find('a')
                 availability = False if product.find("div",class_="out-of-stock-label") else True
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
-                price = price_tag.get_text(strip=True) if price_tag else ""
+                price = re.sub("[^0-9,]","",price_tag.get_text(strip=True)) if price_tag else ""
                 link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
                 title, size = extract_data_from_title(title)
                 products_data.append({
@@ -2454,5 +2454,3 @@ STORES_SCRAPPERS = {
     "Trop":scrap_trop #Wrocław
 }
 
-for g in scrap_gunsmasters():
-    print(g)
