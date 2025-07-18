@@ -1686,7 +1686,6 @@ def scrap_vismag() -> [dict]:
         products_data = []
 
         for page in range(get_total_pages()):
-
             url = f'{base_url}?p={page}/'
 
             response = requests.get(url, headers=headers)
@@ -1821,8 +1820,12 @@ def scrap_bazooka_updated() -> [dict]:
             for li in ul.find_all("li"):
 
                 line = li.get_text(strip=True) #strong 0 cena
-                price = re.search(r"\([0-9,]+",line).group(0)#.strip().replace("/szt","")
-                price = re.sub(r"([^0-9,\\.])","",price)
+                print(line)
+                try:
+                    price = re.search(r"\([0-9,]+",line).group(0)#.strip().replace("/szt","")
+                    price = re.sub(r"([^0-9,\\.])","",price)
+                except Exception:
+                    continue
                 title = line.replace(price,"")
                 if size is None:
                     title, size = extract_data_from_title(title)
