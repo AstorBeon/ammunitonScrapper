@@ -27,7 +27,6 @@ requests.packages.urllib3.disable_warnings()
 def extract_data_from_title(title:str) -> (str,str):
     size = "?"
     global AVAILABLE_AMMO_SIZES,AVAILABLE_DYNAMIC_AMMO_SIZES
-    # get size
     is_found=False
     for av_size in AVAILABLE_AMMO_SIZES:
         if av_size in title:
@@ -45,7 +44,6 @@ def extract_data_from_title(title:str) -> (str,str):
                 else:
                     size = res[0]
 
-                #print(f"Size: {size}")
                 title = title.replace(size,"")
                 break
     return title, size
@@ -71,7 +69,6 @@ def get_all_existing_sizes(df:DataFrame)->[str]:
     if df.empty:
         return []
 
-
     options = list(set(df["Kaliber"].to_list()))
 
     return options
@@ -82,31 +79,32 @@ def map_sizes(data:pd.DataFrame) -> pd.DataFrame:
     return data
 
 def map_prices(data:pd.DataFrame) -> pd.DataFrame:
-    data.to_excel("tmp.xlsx")
+    """
+    Method for modifying prices to proper numeric format
+    :param data: dataframe to be mapped
+    :return:  updated dataframe
+    """
     data["Cena"] = data["Cena"].apply(trim_price)
     return data
 
 def _single_title_price_map(row):
-    #opak. 25szt.
-    #op. 25szt.(zł/op.)
-    #tytul, cena = row["Tytuł"],row["Cena"]
     per_box = re.search(r"((opak\. ?\d+szt\.)|(op\. ?\d+szt\.\(zł/op\.\)))",row["Tytuł"])
 
     if per_box is not None:
         match_string = per_box.group(0)
         amount = re.sub(r"[^0-9]","",match_string)
-        #print(f"{match_string} -> {amount}")
         row["Tytuł"] = row["Tytuł"].replace(match_string,"")
         row["Cena"] = row["Cena"]/int(amount)
-        #print(f"{tytul} - {cena}")
 
     return row
 
 
 def map_prices_by_box_size(data:pd.DataFrame) -> pd.DataFrame:
-    # x = data.apply(lambda x: _single_title_price_map(x), axis=1)
-    # print(x)
-    # return
+    """
+    Method for mapping existing ammo prices by box prices
+    :param data: complete df to be mapped
+    :return: df with updated values
+    """
     data= data.apply(lambda x: _single_title_price_map(x),axis=1 )
     return data
 

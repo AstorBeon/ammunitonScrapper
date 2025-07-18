@@ -263,7 +263,7 @@ h1,h3{
 """
 st.markdown(title_alignment, unsafe_allow_html=True)
 
-#col1,col2 = st.columns([1,3])
+#Completing basic state values
 if "pulled_data" not in st.session_state.keys():
     st.session_state["pulled_data"]={}
 if "complete_df" not in st.session_state.keys():
@@ -276,9 +276,10 @@ COMPLETE_DATA=pd.DataFrame()
 LOADED_STORES = []
 DATA_PULL_TOTAL_TIME=0
 
-st.markdown("\n")
 
 st.markdown("\n")
+st.markdown("\n")
+
 
 st.write(f"Ostatnie odświeżenie danych: {'Brak' if 'date_of_last_pull' not in st.session_state.keys() else 
 st.session_state['date_of_last_pull']}")
@@ -286,13 +287,14 @@ st.session_state['date_of_last_pull']}")
 st.markdown("\n")
 st.markdown("\n")
 
+#Main columns: filters and data
 col1,col2 = st.columns([1,3])
 with col1:
 
+    #Filters
     pref_region = st.multiselect("Województwo",cities_per_region.keys(),placeholder="Województwo")
 
     if pref_region:
-
         cities = [x for xskey, xs in cities_per_region.items() for x in xs if xskey in pref_region]
         pref_city = st.multiselect("Miasto",cities,placeholder="Miasto")
     else:
@@ -310,6 +312,7 @@ with col1:
     #
     pref_available = st.checkbox("Pokaż tylko dostępne",help="Zaznacz aby wyświetlić tylko dostępne produkty. Produkty niedostępne oraz bez znanego statusu (sklep nie udostępnia informacji) będą ukryte)")
 
+    #If any filter engaged...
     if pref_size or pref_name or pref_stores or pref_available or pref_region or pref_city:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
@@ -333,7 +336,6 @@ with col1:
             st.session_state["filtered_df"] = st.session_state["filtered_df"].query("Dostępny == 'T'")
 
         if pref_region:
-            #proper_cities
 
             st.session_state["filtered_df"] = st.session_state["filtered_df"][st.session_state["filtered_df"]["Miasto"].isin(cities)]
 
@@ -342,6 +344,7 @@ with col1:
         st.session_state["filtered_df"] = st.session_state["complete_df"]
 
 with col2:
+    #Showing data
     st.dataframe(st.session_state["filtered_df"],
                  column_config={"Link": st.column_config.LinkColumn(
             "Link", display_text="Oferta"
@@ -367,7 +370,7 @@ st.markdown("\n")
 
 
 
-
+#List of colored stores (green/red)
 try:
     st.subheader("Obecnie dostępne sklepy :)")
     total_amount_of_stores = len(st.session_state["loaded_stores"])
@@ -385,7 +388,6 @@ try:
                 st.success(store)
             else:
                 st.error(store)
-            #st.text(f"{store} - {status}")
             count+=1
 
 except Exception as e:
