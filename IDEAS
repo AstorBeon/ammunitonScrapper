@@ -14,3 +14,11 @@ DONE-Pogrupować kalibry
 
 -to trim better titles
 -to add map with stores marked on it
+
+No prices on:
+    -Kaliber (no prices av)
+    -Atena gun (PROMOCJA - 0)
+    -Knieja (no prices and most sizes)
+    -Filter out SPŁONKI
+    -Get rid of duplicates (globally) - DONE
+    -

@@ -13,7 +13,7 @@ headers = {
 
 AVAILABLE_AMMO_SIZES = ["762x25","243Win","7×64","30-30 WIN",".222 REM","223 REM","223REM","223Rem","338 Win.",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm","9X19MM", "308", ".22LR","22LR", "22 LR",".22","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",".300 BLK",".300",
                         "kal.380Auto","kal.50AE", ".30","0.38",".38","12/76","22lr","300 AAC","9x19MM",".25","6.5","12/67","12/76","7,63","12/65",
-                        "kal.32",".17","30-06","5,6MM","6,5"]
+                        "kal.32",".17","30-06","5,6MM","6,5","7 x 65","270Win."]
 AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})",r"(\d{1,3}x\d{2})", r"(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
 AVAILABLE_AMMO_SIZE_MAPPINGS = {r"(9|9mm|9MM|9 mm|9 MM|9x19|9 PARA|9 SHORT|9×19|9x19MM|9X19MM)":"9mm",
                                 r"(\.22LR|22LR|22 LR|\.22 LR|kal. 22LR,|kal.22LR|kal. 22lr|22lr|22)":".22LR",
@@ -228,7 +228,7 @@ def scrap_strefa_celu() -> [dict]:
                     "Tytuł": title,
                     "Kaliber":size,
                     "Sklep":"Strefa Celu",
-                    "Cena": price,
+                    "Cena": price if "LR" not in title else str(float(price)/50),
                     "Dostępny":available.get_text(strip=True)=="Dostępny" if available else False,
                     'Link': link
                 })

@@ -79,6 +79,8 @@ def normalize_data(df:list):
     #adjusting prices for box size (if available)
     total_df = Scrapper.map_prices_by_box_size(total_df)
 
+    total_df.drop_duplicates(inplace=True)
+
 
     #re.sub(r"\.", "", "aa.bb.c")
     return total_df
