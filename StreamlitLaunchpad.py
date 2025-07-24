@@ -54,9 +54,10 @@ def normalize_data(df:list):
 
     total_df = Scrapper.map_prices(total_df)
 
-    exclude_regex = r"([Pp]ude[lł]ko)|(SZKOLENIE)"
+    exclude_regex = r"([Pp]ude[lł]ko)|(SZKOLENIE)|(SPŁONKI|Spłonki|spłonki)"
 
     total_df = total_df[~total_df['Tytuł'].str.contains(exclude_regex,regex=True)]
+
 
 
     total_df.columns = ["Miasto","Tytuł","Cena","Link","Kaliber","Dostępny","Sklep"]

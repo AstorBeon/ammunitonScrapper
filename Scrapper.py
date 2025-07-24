@@ -11,7 +11,7 @@ headers = {
 }
 
 
-AVAILABLE_AMMO_SIZES = ["762x25","243Win","7×64","30-30 WIN",".222 REM","223 REM","223REM","223Rem","338 Win.",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm","9X19MM", "308", ".22LR","22LR", "22 LR",".22","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",".300 BLK",".300",
+AVAILABLE_AMMO_SIZES = ["762x25","243Win","7×64","30-30 WIN",".222 REM","223 REM","223REM","223Rem","338 Win.",".338","kal. 38Spec","38Spec",".38 Special",".357 Magnum",".357","kal. 45ACP","45ACP","7,65","7,62×39","7,62",".223Rem",".223REM",".223","308 Win","9mm", "9x19","9×19","9×17","9 mm","9X19MM", "308", ".22LR","22LR", "22 LR",".22","22WMR",".44 Rem.",".44", "9 PARA","357","12/70",".45 AUTO",".45 ACP",".45", "38 Super Auto",".40",  "10mm auto","10mm Auto","10mm","9 SHORT",".300 BLK",".300",
                         "kal.380Auto","kal.50AE", ".30","0.38",".38","12/76","22lr","300 AAC","9x19MM",".25","6.5","12/67","12/76","7,63","12/65",
                         "kal.32",".17","30-06","5,6MM","6,5","7 x 65","270Win."]
 AVAILABLE_DYNAMIC_AMMO_SIZES = [r"(\d{1,2}(,|\.)\d{1,2}x\d{1,2})",r"(\d{1,3}x\d{2})", r"(kal\. [\\/a-zA-Z0-9]+)"] #todo add more
@@ -1449,21 +1449,6 @@ def scrap_knieja() -> [dict]:
 def scrap_atenagun() -> [dict]:
     base_url = 'https://www.atenagun.pl/kategoria/amunicja'
 
-
-    def get_total_pages():
-        response = requests.get(base_url, headers=headers)
-        if response.status_code != 200:
-            print(f"Failed to load the page: {response.status_code}")
-            return 1
-
-        soup = BeautifulSoup(response.text, 'html.parser')
-
-
-        # print([link.get_text().replace("\n","") for link in pagination ])
-
-
-
-
     def scrape_all_products():
         products_data = []
         page=1
@@ -1502,6 +1487,28 @@ def scrap_atenagun() -> [dict]:
 
                 # availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title, size = extract_data_from_title(title)
+                if price=="0" or "PROMOCJA" in title:
+                    continue
+
+                #Price adjustment for packs
+                if float(price.replace(",","."))>20:
+                    amount_in_title = re.search(r"[0-9]\.szt",title)
+                    if amount_in_title:
+                        div = int(amount_in_title.group(0)[:-4])
+                        price = str(round(float(price)/div,2))
+                    else:
+                        #Additional request
+                        subresponse = requests.get(link, headers=headers)
+
+                        subsoup = BeautifulSoup(subresponse.text, 'html.parser')
+                        maindiv = subsoup.find("div",class_="woocommerce-product-attributes-item--attribute_pa_opakowanie")
+                        #print(maindiv.get_text(strip=True)) #todo continue here
+                        try:
+                            amount = int(re.sub(r"[^0-9]","",maindiv.get_text(strip=True)))
+                            price = float(price.replace(",", "."))/amount
+                        except Exception as e:
+                            price="?"
+
                 products_data.append({
                     "Miasto": "Kraków",
                     "Tytuł": title,
