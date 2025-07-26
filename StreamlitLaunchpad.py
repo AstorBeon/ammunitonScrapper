@@ -135,7 +135,7 @@ def scrap_complete_data(list_of_stores:list=None):
             msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data({round(time_format(start_time))}s)")
             st.session_state["loaded_stores"][store_name_arg] = "ERROR"
     stores_to_pull = list(Scrapper.STORES_SCRAPPERS.keys()) if list_of_stores is None else list_of_stores
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6,thread_name_prefix="Data scrapper") as executor:
         executor.map(pull_single_store, stores_to_pull)
 
 

@@ -434,6 +434,8 @@ def scrap_magazynuzbrojenia() -> [dict]:
                 availability = "brak towaru" not in availability_tag.get_text(strip=True)\
                     if availability_tag else "Availability unknown"
                 title,size = extract_data_from_title(title)
+                if "Pistolet " in title or "Karabin " in title:
+                    continue
                 products_data.append({
                     "Miasto": "Warszawa",
                     "Tytuł": title,
@@ -716,7 +718,7 @@ def scrap_gun_eagle_rusznikarnia() -> [dict]:
                 url = base_url
             else:
                 url = f'{base_url}?page={page}'
-                print(url)
+
             # print(f'\nScraping page {page}: {url}')
             response = requests.get(url, headers=headers)
 
@@ -1622,7 +1624,7 @@ def scrap_coltwroclaw() -> [dict]:
     def scrape_all_products():
         products_data = []
         pages = get_total_pages()
-        print(f"Found pages: {pages}")
+
         for page in range(pages):
 
             url = f'{base_url}?page={page}/'
@@ -1827,7 +1829,7 @@ def scrap_bazooka_updated() -> [dict]:
             for li in ul.find_all("li"):
 
                 line = li.get_text(strip=True) #strong 0 cena
-                print(line)
+
                 try:
                     price = re.search(r"\([0-9,]+",line).group(0)#.strip().replace("/szt","")
                     price = re.sub(r"([^0-9,\\.])","",price)
