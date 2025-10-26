@@ -467,13 +467,15 @@ def scrap_kaliber() -> [dict]:
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        pagination = soup.find_all("nav")[-1].find_all("li")
+        pagination = soup.find_all("nav")[-1].find_all("a")
 
         if not pagination:
             return 1
 
-        page_numbers = [int(link.get_text().replace("\n",""))
-                        for link in pagination if link.get_text().replace("\n","").isdigit()]
+
+        page_numbers = [re.sub("[^0-9]]","",l.get_text().strip()) for l in pagination]
+        page_numbers = [int(p) for p in page_numbers if p.isdigit()]
+
         return max(page_numbers) if page_numbers else 1
 
 
@@ -485,7 +487,7 @@ def scrap_kaliber() -> [dict]:
             if page == 1:
                 url = base_url
             else:
-                url = f'https://kaliber.pl/184-amunicja#/page-{page}'
+                url = f'https://kaliber.pl/185-amunicja#/page-{page}'
             response = requests.get(url, headers=headers)
 
             if response.status_code != 200:
@@ -493,18 +495,19 @@ def scrap_kaliber() -> [dict]:
                 continue
 
             soup = BeautifulSoup(response.text, 'html.parser')
-            product_containers = soup.find_all('li', class_='productsSection-products-one')
+            product_containers = soup.find_all('article')
 
             for product in product_containers:
-                title_tag = product.find('h2', class_='product-name')
+                title_tag = product.find('p', class_='product-miniature__title')
                 price_tag = product.find('span', class_='price product-price')
 
-                link_tag = product.find('a', class_='product-name')
-                availability = bool(link_tag)
+                link_tag = title_tag.find('a')
+
+                availability = "?" #bool(link_tag)
 
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
                 price = price_tag.get_text(strip=True) if price_tag else ""
-                link = urljoin(base_url, link_tag['href']) if link_tag and link_tag.has_attr('href') else "No link"
+                link = link_tag['href'] if link_tag and link_tag.has_attr('href') else "No link"
                 #availability = availability_tag.get_text(strip=True) if availability_tag else "Availability unknown"
                 title,size = extract_data_from_title(title)
                 products_data.append({
@@ -2488,7 +2491,7 @@ def dev_crap_all():
                 print(f"Failure for: {store_name_arg}")
             #st.session_state["pulled_data"][store_name_arg] = res
             if not res:
-                print(e)
+
                 print(f"ERROR - Failed to scrap {store_name_arg}")
             else:
                 print(f"OK - Successfully scrapped {store_name_arg} -> {len(res)} items - {additional_success_info}")
@@ -2509,7 +2512,4 @@ def dev_crap_all():
     complete_df.to_excel("Complete data")
 
 dev_crap_all()
-
-#scrap_magazynuzbrojenia()
-
 
