@@ -1,5 +1,7 @@
 import math
 import re
+import time
+import traceback
 from urllib.parse import urljoin
 import pandas as pd
 import requests
@@ -437,7 +439,7 @@ def scrap_magazynuzbrojenia() -> [dict]:
                 title,size = extract_data_from_title(title)
                 excluded_words = ["Pistolet","Karabin","Karabian","Rifle","Shotgun"]
                 price_limit = 200
-                if any([x in title for x in excluded_words]) or float(price) > price_limit:
+                if any([x in title for x in excluded_words]) or float(re.sub(".00","",re.sub(",",".",re.sub("[^0-9,]","",price)))) > price_limit:
                     continue
                 products_data.append({
                     "Miasto": "Warszawa",
@@ -454,7 +456,7 @@ def scrap_magazynuzbrojenia() -> [dict]:
     return scrape_all_products()
 
 def scrap_kaliber() -> [dict]:
-    base_url = 'https://kaliber.pl/184-amunicja'
+    base_url = 'https://kaliber.pl/185-amunicja'
 
 
     def get_total_pages():
@@ -465,7 +467,7 @@ def scrap_kaliber() -> [dict]:
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        pagination = soup.find("div",id="pagination_bottom").find_all("li")
+        pagination = soup.find_all("nav")[-1].find_all("li")
 
         if not pagination:
             return 1
@@ -792,7 +794,7 @@ def scrap_top_shot() -> [dict]:
     def scrape_all_products():
         products_data = []
         total_pages = get_total_pages()
-        print(f"Total pages found: {total_pages}")
+        #print(f"Total pages found: {total_pages}")
 
         for page in range(1, total_pages + 1):
             if page == 1:
@@ -2466,4 +2468,48 @@ STORES_SCRAPPERS = {
     "Siwiaszczyk": scrap_siwiaszczyk, #Łódź
     "Trop":scrap_trop #Wrocław
 }
+
+def dev_crap_all():
+
+    complete_data = []
+
+
+
+
+    def pull_single_store(store_name_arg,additional_success_info=""):
+        start_time = time.time()
+        try:
+
+            res = STORES_SCRAPPERS[store_name_arg]()
+            try:
+                complete_data.extend(res)
+            except Exception as e:
+                print(e)
+                print(f"Failure for: {store_name_arg}")
+            #st.session_state["pulled_data"][store_name_arg] = res
+            if not res:
+                print(e)
+                print(f"ERROR - Failed to scrap {store_name_arg}")
+            else:
+                print(f"OK - Successfully scrapped {store_name_arg} -> {len(res)} items - {additional_success_info}")
+
+
+
+        except Exception as e:
+
+            print(traceback.print_exc())
+
+
+            print(f"ERROR - Failed to scrap {store_name_arg} data({(start_time)}s)")
+
+    for store,count in zip(STORES_SCRAPPERS.keys(),range(len(STORES_SCRAPPERS))):
+        pull_single_store(store,f"{count}/{len(STORES_SCRAPPERS)}")
+
+    complete_df = pd.DataFrame(complete_data)
+    complete_df.to_excel("Complete data")
+
+dev_crap_all()
+
+#scrap_magazynuzbrojenia()
+
 

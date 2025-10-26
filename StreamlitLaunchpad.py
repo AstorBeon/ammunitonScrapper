@@ -133,6 +133,7 @@ def scrap_complete_data(list_of_stores:list=None):
             if "loaded_stores" not in st.session_state.keys():
                 st.session_state["loaded_stores"] = {}
             msg = st.toast(f"ERROR - Failed to scrap {store_name_arg} data({round(time_format(start_time))}s)")
+            print(f"ERROR - Failed to scrap {store_name_arg} data({round(time_format(start_time))}s)")
             st.session_state["loaded_stores"][store_name_arg] = "ERROR"
     stores_to_pull = list(Scrapper.STORES_SCRAPPERS.keys()) if list_of_stores is None else list_of_stores
     with concurrent.futures.ThreadPoolExecutor(max_workers=6,thread_name_prefix="Data scrapper") as executor:
@@ -410,3 +411,4 @@ st.text("Masz uwagi? Brakuje sklepu? Coś może działać lepiej? Daj cynk na as
 if "was_informed_about_wip" not in st.session_state:
     basic_info_prompt(f'Praca wre! Strona wciąż jest w budowie, mogą zdarzać się błędy. Ostatnia aktualizacja kodu: {st.session_state["date_of_last_codechange"]}')
     st.session_state["was_informed_about_wip"]=True
+
