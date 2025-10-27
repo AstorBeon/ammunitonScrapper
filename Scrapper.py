@@ -3,6 +3,8 @@ import re
 import time
 import traceback
 from urllib.parse import urljoin
+
+import cloudscraper
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -2222,18 +2224,35 @@ def scrap_gunmonkey() -> [dict]:
 
 def scrap_proce_i_pestki() -> [dict]:
     base_url = 'https://proceipestki.pl/kategoria-produktu/amunicja/'
-
+    pnp_headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://proceipestki.pl/",
+    }
 
     def get_total_pages():
-        response = requests.get(base_url, headers=headers)
-        if response.status_code != 200:
-            print(f"Failed to load the page: {response.status_code}")
-            return 1
+        session = requests.Session()
+        session.headers.update(pnp_headers)
+        response = session.get(base_url)
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        scraper = cloudscraper.create_scraper()
+        url = "https://proceipestki.pl/kategoria-produktu/amunicja/page/2/"
+        response = scraper.get(url).text
+
+        # if response.status_code != 200:
+        #     print(f"Failed to load the page: {response.status_code}")
+        #     print(response.text)
+        #     return 1
+
+        soup = BeautifulSoup(response, 'html.parser')
 
         try:
-            return max([int(x.get_text(strip=True)) for x in soup.find("div",class_="ep-pagination").find_all("li") if x.get_text(strip=True).isdigit()])
+            return max([int(x.get_text(strip=True)) for x in soup.find("ul",class_="page-numbers").find_all("li") if x.get_text(strip=True).isdigit()])
 
         except:
             return 1
@@ -2243,31 +2262,33 @@ def scrap_proce_i_pestki() -> [dict]:
 
     def scrape_all_products():
         products_data = []
+        print(f"All pagess: {get_total_pages()}")
+        scraper = cloudscraper.create_scraper()
 
         for page in range(get_total_pages()):
 
             url = f'{base_url}/page/{page}'
-            response = requests.get(url, headers=headers)
-            if response.status_code != 200:
-                break
 
-            soup = BeautifulSoup(response.text, 'html.parser')
-            product_containers = soup.find_all('div',class_="bdt-wc-product-desc")
+            response = scraper.get(url).text
+            soup = BeautifulSoup(response, 'html.parser')
+            # if response.status_code != 200:
+            #     break
+
+
+            product_containers = soup.find_all('li',class_="product")
             for product in product_containers:
 
                 title_tag = product.find('h2')
                 try:
-                    price = product.find('div', class_='bdt-wc-product-price').get_text(strip=True)
+                    price = product.find('span', class_='price').get_text(strip=True)
 
                 except:
                     price=''
 
-                try:
-                    subresponse = requests.get(product.find('a')['href'])
-                    subsoup =BeautifulSoup(subresponse.text, 'html.parser')
-                    availibility = subsoup.find("p",class_="stock").get_text(strip=True) == "Na stanie"
-                except:
-                    availibility=False
+
+
+                availibility = product.find("span",class_="out-of-stock-sticker") is not None
+
 
                 title = title_tag.get_text(strip=True) if title_tag else "No title"
 
@@ -2286,8 +2307,9 @@ def scrap_proce_i_pestki() -> [dict]:
                 })
 
         return products_data
+    res = scrape_all_products()
 
-    return scrape_all_products()
+    return res
 
 
 def scrap_siwiaszczyk() -> [dict]:
@@ -2482,7 +2504,7 @@ def dev_crap_all():
     def pull_single_store(store_name_arg,additional_success_info=""):
         start_time = time.time()
         try:
-
+            print(f"Pulling {store_name_arg}..." , end="\r")
             res = STORES_SCRAPPERS[store_name_arg]()
             try:
                 complete_data.extend(res)
@@ -2512,4 +2534,6 @@ def dev_crap_all():
     complete_df.to_excel("Complete data")
 
 dev_crap_all()
+
+
 
