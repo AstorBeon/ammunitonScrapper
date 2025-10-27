@@ -2595,7 +2595,7 @@ def refurbished_scrap_all(multithread=True):
     totaltime=(end - start)/60
     print(f"Elapsed: {totaltime:.2f} minutes")
 
-refurbished_scrap_all()
+#refurbished_scrap_all()
 
 
 
