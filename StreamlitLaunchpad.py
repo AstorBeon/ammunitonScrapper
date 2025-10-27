@@ -148,6 +148,9 @@ def scrap_complete_data(list_of_stores:list=None):
     #DATA_PULL_TOTAL_TIME = Scrapper.
     #st.session_state["complete_data"]
     st.session_state["loaded_stores"] = tmp_store_states
+
+
+
     st.success(f"Aktualizacja danych zajeła: {round(time.time()-start,2)}s")
     try:
 

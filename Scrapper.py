@@ -2,6 +2,7 @@ import math
 import re
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urljoin
 
 import cloudscraper
@@ -587,7 +588,7 @@ def scrap_bestgun() -> [dict]:
         try:
             pagination = int([x for x in soup.find("div", class_="IndexStron").find_all("a") if x.get_text().isdigit()][-1].get_text())
         except Exception as e:
-            print(e)
+
             return 1
 
         return pagination
@@ -2262,7 +2263,7 @@ def scrap_proce_i_pestki() -> [dict]:
 
     def scrape_all_products():
         products_data = []
-        print(f"All pagess: {get_total_pages()}")
+
         scraper = cloudscraper.create_scraper()
 
         for page in range(get_total_pages()):
@@ -2384,7 +2385,7 @@ def scrap_siwiaszczyk() -> [dict]:
                 })
 
             if len(product_containers)<10:
-                print(f"Final call: {len(product_containers)}")
+
                 break
 
 
@@ -2490,32 +2491,75 @@ STORES_SCRAPPERS = {
     "GoldGuns":scrap_goldguns, #Poznań
     "Gun Monkey":scrap_gunmonkey, #Jaworzno
     "Proce i Pestki":scrap_proce_i_pestki, #Łódź
-    "Siwiaszczyk": scrap_siwiaszczyk, #Łódź
+    #"Siwiaszczyk": scrap_siwiaszczyk, #Łódź
     "Trop":scrap_trop #Wrocław
 }
 
-def dev_crap_all():
+def normalize_data(df:list):
+    total_df = pd.DataFrame(df)
+    total_df = total_df[["Miasto", "Tytuł", "Cena", "Link", "Kaliber", "Dostępny", "Sklep"]]
+    total_df = map_sizes(total_df)
 
+    total_df = map_prices(total_df)
+
+    exclude_regex = r"([Pp]ude[lł]ko)|(SZKOLENIE)|(SPŁONKI|Spłonki|spłonki)"
+
+    total_df = total_df[~total_df['Tytuł'].str.contains(exclude_regex,regex=True)]
+
+
+
+    total_df.columns = ["Miasto","Tytuł","Cena","Link","Kaliber","Dostępny","Sklep"]
+
+    def drop_all_odd(value):
+        subval = re.subn(r"[^0-9,\\.]", "", value, count=1)[0].replace(".00", "")
+        subval = re.sub("\\.{2}[0-9]+$", "", subval)
+        if subval.count(".") == 2:
+            subval = re.sub(r"\.[0-9]{2}\.?$", "", subval)
+
+        return subval
+
+    # total_df.to_excel("tmp.xlsx", index=False)
+
+    total_df["Cena"] = pd.to_numeric(total_df["Cena"].fillna('').apply(lambda x: drop_all_odd(x)),
+                                      errors='coerce')  # .fillna('-1')
+
+    total_df['Dostępny'] = total_df['Dostępny'].apply(lambda x: "T" if x  else ("N" if not x else "?"))
+
+    #adjusting prices for box size (if available)
+    total_df = map_prices_by_box_size(total_df)
+
+    total_df.drop_duplicates(inplace=True)
+
+
+    #re.sub(r"\.", "", "aa.bb.c")
+    return total_df
+
+
+def refurbished_scrap_all(multithread=True):
+    start = time.perf_counter()
     complete_data = []
-
+    stores_completed = {x:"?" for x in STORES_SCRAPPERS.keys()}
 
 
 
     def pull_single_store(store_name_arg,additional_success_info=""):
-        start_time = time.time()
+
         try:
-            print(f"Pulling {store_name_arg}..." , end="\r")
+            if not multithread:
+                print(f"Pulling {store_name_arg}..." , end="\r")
             res = STORES_SCRAPPERS[store_name_arg]()
             try:
                 complete_data.extend(res)
             except Exception as e:
                 print(e)
+                stores_completed[store_name_arg] = False
                 print(f"Failure for: {store_name_arg}")
             #st.session_state["pulled_data"][store_name_arg] = res
             if not res:
-
+                stores_completed[store_name_arg] = False
                 print(f"ERROR - Failed to scrap {store_name_arg}")
             else:
+                stores_completed[store_name_arg] = True
                 print(f"OK - Successfully scrapped {store_name_arg} -> {len(res)} items - {additional_success_info}")
 
 
@@ -2524,16 +2568,34 @@ def dev_crap_all():
 
             print(traceback.print_exc())
 
+            stores_completed[store_name_arg] = False
+            print(f"ERROR - Failed to scrap {store_name_arg}")
 
-            print(f"ERROR - Failed to scrap {store_name_arg} data({(start_time)}s)")
 
-    for store,count in zip(STORES_SCRAPPERS.keys(),range(len(STORES_SCRAPPERS))):
-        pull_single_store(store,f"{count}/{len(STORES_SCRAPPERS)}")
+    #Multi thread
+    if multithread:
+        with ThreadPoolExecutor(max_workers=5) as executor:
 
-    complete_df = pd.DataFrame(complete_data)
-    complete_df.to_excel("Complete data")
+            futures = [executor.submit(pull_single_store,store) for store,count in zip(STORES_SCRAPPERS.keys(),range(len(STORES_SCRAPPERS)))]
 
-dev_crap_all()
+            for f in futures:
+                _ = f.result()
+
+                pass
+    else:
+        # Single thread
+        for store,count in zip(STORES_SCRAPPERS.keys(),range(len(STORES_SCRAPPERS))):
+            pull_single_store(store,f"{count+1}/{len(STORES_SCRAPPERS)}")
+
+
+    complete_df = normalize_data(complete_data)
+
+    end = time.perf_counter()
+    complete_df.to_excel("Complete data.xlsx",index=False)
+    totaltime=(end - start)/60
+    print(f"Elapsed: {totaltime:.2f} minutes")
+
+refurbished_scrap_all()
 
 
 
