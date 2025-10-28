@@ -207,10 +207,14 @@ def try_to_retrieve_data():
 
         #st.rerun()
     except FileNotFoundError as e:
+        print(e)
+        st.warning(e)
+        st.warning(os.listdir("data"))
         #Failed to get the file
         st.warning("No data loaded :(.  Trying to do it now... (may take up to couple of minutes)")
         #Attempt to load the data
-        scrap_complete_data()
+        Scrapper.refurbished_scrap_all(True)
+        st.rerun()
         #Data is loaded
 
 
