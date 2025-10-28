@@ -13,6 +13,8 @@ import Scrapper
 
 st.set_page_config(layout="wide")
 
+
+
 #locale.setlocale(locale.LC_TIME, 'pl_PL.UTF-8')
 logging.getLogger('streamlit.runtime.scriptrunner').setLevel(logging.ERROR)
 
@@ -26,26 +28,17 @@ cities_per_region = {"Mazowieckie":["Warszawa","Płock","Pruszków","Siedlce","O
                      "Śląskie":["Jaworzno","Częstochowa"],
                      "Zachodniopomorskie":["Kołobrzeg"]}
 
-# if "loaded_stores" not in st.session_state.keys():
-#     all_pulled_stores = list(Scrapper.STORES_SCRAPPERS.keys())
-#     stores_in_datast = list(st.session_state.keys())
-#     print("Loaded stores not in session state")
-#     st.session_state["loaded_stores"] = {skey:  "Err"
-#                                          for skey in
-#                                          Scrapper.STORES_SCRAPPERS.keys()}
+
+#Find most recent data
+DATAFILES = os.listdir("data")
+DATAFILES.sort(key=lambda x: datetime.strptime(x.replace(".xlsx","").replace("my_silly_database_",""), "%d_%m_%Y"))
+MOST_RECENT_FILE = DATAFILES[-1]
+st.session_state["date_of_last_pull"] = MOST_RECENT_FILE.replace(".xlsx","")[-10:].replace("_",".")
 
 if "date_of_last_pull" not in st.session_state.keys():
     st.session_state["date_of_last_pull"] = "None"
 
-def check_if_last_load_was_at_least_x_minutes_ago(minutes:int):
-    try:
-        if (datetime.now().timestamp() - os.path.getmtime("my_silly_database.xlsx")+ timedelta(hours=2).total_seconds())/60 < minutes:
-            st.toast(f"You can't refresh data more frequently than once per {minutes} minutes")
-            return False
-    except Exception as e:
-        #print(e)
-        return True
-    return True
+
 
 def normalize_data(df:list):
     total_df = pd.DataFrame(df)
@@ -162,8 +155,12 @@ def scrap_complete_data(list_of_stores:list=None):
         st.session_state["complete_df"] = total_df#.astype(str)
         st.session_state["filtered_df"] = total_df#.astype(str)
 
-        st.session_state["complete_df"].to_excel("my_silly_database.xlsx",index=False)
-        st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx") + timedelta(hours=2).total_seconds())
+
+
+
+        st.session_state["complete_df"].to_excel(f"data/{MOST_RECENT_FILE}",index=False)
+        st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime(
+            f"data/{MOST_RECENT_FILE}") + timedelta(hours=2).total_seconds())
         st.balloons()
         st.session_state["loaded_stores"] = {skey: "OK" if skey in st.session_state["complete_df"]["Sklep"].to_list() else "Err" for skey in
                                              Scrapper.STORES_SCRAPPERS.keys()}
@@ -183,7 +180,7 @@ def try_to_retrieve_data():
 
 
 
-        data = pd.read_excel("my_silly_database.xlsx")
+        data = pd.read_excel(f"data/{MOST_RECENT_FILE}")
 
 
 
@@ -193,7 +190,7 @@ def try_to_retrieve_data():
 
         st.session_state["complete_df"] = data
         st.session_state["filtered_df"] = data
-        st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime("my_silly_database.xlsx"))
+        #st.session_state["date_of_last_pull"] = time.ctime(os.path.getmtime(f"data/{MOST_RECENT_FILE}"))
         st.session_state["date_of_last_codechange"] = max(
             [time.ctime(os.path.getmtime("StreamlitLaunchpad.py")),
              time.ctime(os.path.getmtime("Scrapper.py"))])
@@ -403,7 +400,11 @@ if "admin" in st._get_query_params().keys():
 
 #If admin is verified and password confirmed - refresh data
 if "download_order" in st.session_state.keys() and st.session_state["download_order"]:
-    scrap_complete_data()
+    #scrap_complete_data()
+    new_data_file = Scrapper.refurbished_scrap_all(True)
+    # MOST_RECENT_FILE = new_data_file[0]
+    # st.session_state["date_of_last_pull"] = MOST_RECENT_FILE.replace(".xlsx", "")[-10:].replace("_", ".")
+
     st.session_state["download_order"]= False
     basic_info_prompt(f"Dane odświeżone! Ilość pobranych ofert: {len(st.session_state['complete_df'])}" )
     st.rerun()

@@ -1,4 +1,6 @@
+import datetime
 import math
+import os
 import re
 import time
 import traceback
@@ -2591,11 +2593,22 @@ def refurbished_scrap_all(multithread=True):
     complete_df = normalize_data(complete_data)
 
     end = time.perf_counter()
-    complete_df.to_excel("Complete data.xlsx",index=False)
+    #complete_df.to_excel("Complete data.xlsx",index=False)
+    filename = f"data/my_silly_database_{datetime.datetime.now().strftime('%d_%m_%Y')}.xlsx"
+    complete_df.to_excel(filename, index=False)
     totaltime=(end - start)/60
     print(f"Elapsed: {totaltime:.2f} minutes")
+    return filename
+
+
+#refurbished_scrap_all(True)
+
 
 #refurbished_scrap_all()
-
-
-
+# files = os.listdir("data")
+# print(files)
+# files.sort(key=lambda x: datetime.datetime.strptime(x.replace(".xlsx","").replace("my_silly_database_",""), "%d_%m_%Y"),reverse=True)
+#
+# print(files)
+#
+#
